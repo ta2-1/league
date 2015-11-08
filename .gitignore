@@ -1,0 +1,8 @@
+# General
+*.bak
+*.pyc
+*.pyo
+*.prefs
+*.stats
+*.pending
+.idea
