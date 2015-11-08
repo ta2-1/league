@@ -1,0 +1,399 @@
+{% extends "initial_base.html" %}
+{% load i18n rating_tags %}
+
+{% block title %}{{site.name}}{% endblock %}
+{% block blockbots %}
+<meta name="robots" content="FOLLOW" />
+<meta name="DOCUMENT-STATE" CONTENT="DYNAMIC" />
+{% endblock %}
+
+{% block extrastyle %}
+	{{ block.super }}
+	
+	<style type="text/css">
+		#chart_div {
+			margin-left: -120px;
+		}
+        .current-state {
+            /*background: #F5F3E4;*/
+            border-radius: 3px;
+            -moz-border-radius: 3px;
+            -webkit-border-radius: 3px;
+            /*box-shadow: 1px 1px 1px 1px #D00;
+            -moz-box-shadow: 1px 1px 1px 1px #D00;
+            -webkit-box-shadow: 1px 1px 1px 1px #D00;*/
+            padding: 10px 10px 5px 10px;
+            margin-bottom: 15px;
+            width: 300px;
+            border: 1px solid #D00;
+        }
+        .rating-date-info {
+            color: #D00;
+            margin-bottom: 10px;
+            /*margin-left: 400px;*/
+        }
+    
+        .small {
+            font-weight: normal;
+            font-size: 85%;
+        }
+	</style>
+	
+<style type="text/css">
+    #city {
+        float: right;
+        padding: 10px;
+    }
+    #city select {
+        margin-left: 5px;
+    }
+    .ya-site-suggest {
+        z-index: -1;
+    }
+
+    .ya-site-form__form {
+        margin-top: -2px;
+        float: left;
+        margin-left: 10px;
+        margin-bottom: -1px;
+    }
+    
+    .ya-site-form__form-form {
+        width: 200px;
+        height: 39px;
+    }
+
+    #ya-site-form0 {
+        width: 200px;
+        height: 39px;
+        display: inline-block;
+    }
+    
+    .ya-site-form__arrow-wrap {
+        display: none;
+    }
+    .ya-site-form__search-wrap {
+        border: 0;
+    }
+    .ya-site-form__search-input-layout-r {
+        display: none;
+    }
+
+    td.ya-site-form__search-input {
+        border: 0px;
+    }
+    
+    html, body {
+		height: 100%;
+	}
+	
+	a.win {
+		color: #0A0;
+	}
+	
+	a.lose {
+		color: #D00;
+	}
+	
+	a:hover.win {
+		color: #070;
+	}
+	
+	a:hover.lose {
+		color: #900;
+		
+	}
+    
+    #user-tools {
+        position: relative;
+        float: right;
+    }
+    
+    .lang {
+    	float: right;
+    	margin-left: 30px;
+    	margin-right: 50px;
+    	padding: 1.2em 10px;
+		font-size: 11px;
+	}	
+	
+    div.breadcrumbs {
+        padding: 2px 8px 3px 68px;
+    }
+
+    #content {
+        padding-left: 26px;
+    }
+
+
+    #container {
+		min-height: 100%;
+	}
+	
+	#footer {
+		position: absolute;
+		bottom: 0;
+		height: 30px;
+		border-top:1px solid #CCC;
+		width: 100%;
+		padding: 5px 0 0 0;
+	}
+	
+	#footer ul li {
+		float: left;
+		list-style-type: none;
+		float: left;
+		padding: 0.5em 10px 8px;
+		font-size: 10px;
+	}
+
+    #footer img {
+        float: right;
+        margin-right: 67px;
+        margin-top: -3px;
+    }
+	
+	.hFooter {
+		height: 40px;
+	}
+	
+	#branding {
+		float: left;
+	}
+	
+	#branding h1 {
+        padding-left: 52px;
+    }
+	
+	#branding h1 a{
+		color: #F4F379;
+		text-decoration: none;		
+   	}
+	#branding h1 a:hover{
+		color: #F4F379;padding: 6px 0 0 0;
+		text-decoration: none;		
+   	}
+	
+	#branding h1 a:visited{
+		color: #F4F379;
+	}
+		
+	#menu {
+		overflow: hidden;
+		background: #417690;
+        float: left;
+	}
+	
+	#menu ul {
+		padding: 5px 0 0 0;
+	}
+	
+	#menu ul li {
+		list-style-type: none;
+		float: left;
+		padding: 0.5em 10px 8px;
+		color: #F4F379;
+		font-size: 12px;
+		font-weight: bold;
+	}
+	
+	#menu ul li a {
+		color: #FFF;
+   		border-bottom: 0px;
+   		text-decoration: none;
+	}
+	
+	#menu ul li a:visited {
+		color: #FFF;
+	}
+
+	#menu ul li.selected a {
+		color: #F4F379;
+		/*border-bottom: dotted 1px;*/
+	}
+	
+	div.tabs ul li{
+		list-style-type: none;
+	}
+	
+	div.tabs {
+    	margin: 10px 0 0 -40px;
+   	}
+   	
+   	div.tabs.menu{
+    	margin: 10px 0 0 10px;
+   	}
+   	
+   	div.tabs ul li a {
+   		border-bottom: dotted 1px;
+		text-decoration: none;
+	}
+	div.tabs ul{
+		display: inline-block;
+	}
+	div.tabs ul li {
+		padding: 0.3em 8px;
+		float: left;
+	}
+	div.tabs ul li.selected {
+		background: #F5F3E4;
+		border-radius: 3px;
+		-moz-border-radius: 3px;
+		-webkit-border-radius: 3px;
+		box-shadow: 0 1px 2px #999;
+		-moz-box-shadow: 0 1px 2px #999;
+		-webkit-box-shadow: 0 1px 2px #999;
+	}
+	div.tabs ul li.selected a {
+		color: #444;
+		border: none;
+	}
+	#table table tbody tr.selected{
+		background-color: #FFC;
+	}
+	td.td_name {
+		min-width: 15em;
+	}
+    th.td_date {
+		max-width: 7em;
+		min-width: 7em;
+    }
+    th.td_delta {
+        min-width: 6em;
+    }
+
+    .tournament-place{
+        min-width: 15em;
+    }
+     .tournament-date{
+        min-width: 15em;
+    }
+    .tournament-categories{
+        min-width: 10em;
+    }
+    .tournament-name {
+        min-width: 27em;
+    }
+	.lm-date {
+		color: #D00;
+		font-size: 0.75em;
+	}
+</style>
+{% endblock %}
+
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url index %}">{% trans 'kortov.net' %}</a></h1>
+{% endblock %}
+
+{% block nav-global %}
+		<div id="menu">
+			<ul>
+				<li {% if request.path_info|match:"^/tournaments" %}class="selected" {% endif %}><a href="{% url tournaments %}">{% trans "Турнирный рейтинг" %}</a></li>
+				<li {% if request.path_info|match:"^/leagues" %}class="selected" {% endif %}><a href="{% url leagues %}">{% trans "Рейтинг лиги" %}</a></li>
+				<li {% if request.path_info|match:"^/competitors" %}class="selected" {% endif %}><a href="{% url competitors %}">{% trans "Участники" %}</a></li>
+			</ul>
+		</div>
+       <script type="text/javascript">
+            function onCityChange() {
+                var s = document.getElementById('city-select');
+                if (s.value == 'irkutsk') {
+                    window.location = "/irkutsk";
+                } else if (s.value == 'vladivostok') {
+                    window.location = "/vladivostok";
+                } else {
+                    window.location = "/";
+                }
+
+
+            }
+        </script> 
+        <div id="city">
+            <label>{% trans "Выберите город:" %}</label>
+            <select id="city-select" onchange="onCityChange()">
+                <!-- {{request.path }}-->
+                <option {% if request.path|match:"^/[^iv]?" %}selected="selected" {% endif %} value="moscow">{% trans "Москва" %}</option>
+                <option {% if request.path|match:"^/vladivostok" %}selected="selected" {% endif %} value="vladivostok">{% trans "Владивосток" %}</option>
+                <option {% if request.path|match:"^/irkutsk" %}selected="selected" {% endif %} value="irkutsk">{% trans "Иркутск" %}</option>
+            </select>
+        </div>
+        
+{% endblock %}
+
+{% block usertools %}
+{% endblock %}
+
+{% block reformal %}
+<script type="text/javascript">
+    var reformalOptions = {
+        project_id: 45461,
+        project_host: "kortov-net.reformal.ru",
+        tab_orientation: "left",
+        tab_indent: "50%",
+        tab_bg_color: "#417690",
+        tab_border_color: "#FFFFFF",
+        tab_image_url: "http://tab.reformal.ru/T9GC0LfRi9Cy0Ysg0Lgg0L%252FRgNC10LTQu9C%252B0LbQtdC90LjRjw==/FFFFFF/2a94cfe6511106e7a48d0af3904e3090/left/1/tab.png",
+        tab_border_width: 1
+    };
+    
+    (function() {
+        var script = document.createElement('script');
+        script.type = 'text/javascript'; script.async = true;
+        script.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'media.reformal.ru/widgets/v3/reformal.js';
+        document.getElementsByTagName('head')[0].appendChild(script);
+    })();
+</script><noscript><a href="http://reformal.ru"><img src="http://media.reformal.ru/reformal.png" /></a><a href="http://kortov-net.reformal.ru">Oтзывы и предложения для Система рейтингования игроков в сквош</a></noscript>
+{% endblock %}
+
+{% block reformal_old %}
+<script type="text/javascript">
+reformal_wdg_domain    = "kortov-net";
+reformal_wdg_mode    = 0;
+reformal_wdg_title   = '{% trans "Система рейтингования игроков в сквош" %}';
+reformal_wdg_ltitle  = '{% trans "Оставьте свой отзыв" %}';
+reformal_wdg_lfont   = "";
+reformal_wdg_lsize   = "";
+reformal_wdg_color   = "#D44";
+reformal_wdg_bcolor  = "#516683";
+reformal_wdg_tcolor  = "#666";
+reformal_wdg_align   = "left";
+reformal_wdg_charset = "utf-8";
+reformal_wdg_waction = 0;
+reformal_wdg_vcolor  = "#D44";
+reformal_wdg_cmline  = "#E0E0E0";
+reformal_wdg_glcolor  = "#105895";
+reformal_wdg_tbcolor  = "#666";
+ 
+reformal_wdg_bimage = "7688f5685f7701e97daa5497d3d9c745.png";
+ 
+</script>
+
+<script type="text/javascript" language="JavaScript" src="http://reformal.ru/tab6.js?charset=utf-8"></script><noscript><a href="http://kortov-net.reformal.ru">Система рейтингования игроков в сквош feedback </a> <a href="http://reformal.ru"><img src="http://reformal.ru/i/logo.gif" /></a></noscript>
+
+{% endblock %}
+
+{% block extrahead %}
+<META HTTP-EQUIV="Cache-Control" CONTENT="no-cache"/>  
+<META HTTP-EQUIV="Pragma" CONTENT="no-cache"/>
+<META HTTP-EQUIV="Expires" CONTENT="-1"/>
+{% endblock %}
+
+{% block footer %}
+<div class="hFooter"></div>
+<div id="footer">
+	<ul>
+		<li>©  2011 — {% now "Y" %}</li>
+		<li><strong>kortov.net</strong></li>
+	</ul>
+    <!--LiveInternet counter--><script type="text/javascript"><!--
+document.write("<a href='http://www.liveinternet.ru/click' "+
+"target=_blank><img src='//counter.yadro.ru/hit?t26.12;r"+
+escape(document.referrer)+((typeof(screen)=="undefined")?"":
+";s"+screen.width+"*"+screen.height+"*"+(screen.colorDepth?
+screen.colorDepth:screen.pixelDepth))+";u"+escape(document.URL)+
+";h"+escape(document.title.substring(0,80))+";"+Math.random()+
+"' alt='' title='" + "{% trans 'LiveInternet: показано количество посетителей за сегодня' %}" + "' " +
+"border='0' width='88' height='15'><\/a>")
+//--></script><!--/LiveInternet-->
+</div>
+{% endblock %}

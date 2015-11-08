@@ -1,0 +1,47 @@
+{% extends "rating/tournaments.html" %}
+
+{% load i18n %}
+
+{% block title %}
+{% trans "Турнир" %} {{object.title}} — {{block.super}}
+{% endblock %}
+
+{% block content_title %}
+<h1>{% trans "Турнир" %} {{object.title}}</h1>
+{% endblock %}
+
+{% block content %}
+<br/>
+<div>
+  <p>
+  <span>{% trans "Дата проведения" %}: </span><span><strong>{{object.get_date}}</strong></span>
+  <p/>
+  <p>
+  <a href="http://squashclub.ru{{object.squashclub_url}}">{% trans "Информация о турнире на сайте СквошКлуб.ру" %}</a>
+  <p/>
+</div>
+<br/>
+<br/>
+<div>
+<table>
+	<theader>
+	<th>{% trans "№" %}</th>
+	<th>{% trans "Название категории" %}</th>
+	<th>{% trans "Места проведения" %}</th>
+	<th>{% trans "Количество участников" %}</th>
+	</theader>
+	<tbody>
+		{% for rs in object.resultset_set.all|dictsort:"category.title" %}
+		<tr>
+			<td>{{forloop.counter}}</td>
+			<td><a href="{% url resultset rs.tournament.id rs.category.id %}">{{rs.category}}</a></a></td>
+			<td>{% for loc in rs.locations__set.all%}{{loc}}{%if not forloop.last%}, {%endif%}{%endfor%}</td>
+			<td>{{rs.competitors_count}}</td>
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+</div>
+
+
+{% endblock %}

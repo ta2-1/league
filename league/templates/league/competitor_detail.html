@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% load i18n rating_tags%}
+
+{% block title %}
+{{object.firstName }} {{object.lastName }} — {{leaguecompetitor.league.title}} — {{block.super}}
+{% endblock %}
+
+{% block extrastyle %}
+	{{ block.super }}
+	
+	
+{% endblock %}
+
+{% block extrahead %}
+	<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+    	google.load("visualization", "1", {packages:["corechart"]});
+      	google.setOnLoadCallback(drawChart);
+      	function drawChart() {
+      		var data = new google.visualization.DataTable();
+      		data.addColumn('datetime', 'Datetime'); // Implicit domain label col.
+      		data.addColumn('number', 'Rating'); // Implicit series 1 data col.
+      		data.addColumn({type:'string', role:'tooltip'}); // annotation role col.
+      		data.addRows([
+      		    [new Date({{leaguecompetitor.league.start_date.year}}, {{leaguecompetitor.league.start_date.month}}-1, {{leaguecompetitor.league.start_date.day}}), 100, '{% trans "Начало" %}'], 
+      		    {% for obj in rr|dictsort:"datetime" %}      		          
+      		    [new Date({{obj.datetime|date:'Y,n-1,j,G,i'}}), {{obj.rating_after|stringformat:"f"}}, '{{obj.game}}'] {% if not forloop.last %},{% endif %}
+      		    {% endfor %}      		   
+      		]);
+
+        	var options = {
+          		title: '{% trans "График изменения рейтинга" %}',
+          		pointSize: 5,
+          		legend: 'none',
+          		colors: ['#DD0000','blue'],
+          		hAxis: {format: 'dd.MM'}
+	        };
+
+    	    var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+        	chart.draw(data, options);
+     	}
+    </script>
+{% endblock %}
+
+{% block content_title %}
+<h1>{{object.firstName}} {{object.lastName}}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="tabs">
+	<ul>
+		<li>
+			<a href="{% url competitor object.id %}">{% trans "Турниры" %}</a>
+		</li>
+		<li class="selected">
+			<a href="{% url competitor_leagues object.id %}">{% trans "Лига" %}</a>
+		</li>
+		<li>
+			<a href="{% url competitor_rivals object.id %}">{% trans "Статистика матчей" %}</a>
+		</li>
+        <li>
+            <a href="{% url competitor_game_rivals object.id leaguecompetitor.league.id %}">{% trans "Выбор соперника" %}</a>
+        </li>
+	</ul>
+</div>
+    
+<div id="table">
+<table>
+	<theader>
+	<th>{% trans "№" %}</th>
+	<th>{% trans "Название лиги" %}</th>
+	<th>{% trans "Дата начала" %}</th>
+	<th>{% trans "Дата окончания" %}</th>
+	<th>{% trans "Соперники" %}</th>
+	<th>{% trans "Игры" %}</th>
+	<th>{% trans "Всего участников" %}</th>
+	<th>{% trans "Всего игр" %}</th>
+	<!--th>Ссылка на рейтинговую таблицу</th-->
+	</theader>
+	<tbody>
+		{% for obj in leaguecompetitors %} 
+		<tr {% if obj.league.id = leaguecompetitor.league.id %} class="selected" {% endif %}>
+			<td><a href="{% url competitor_league obj.competitor.id obj.league.id %}">{{forloop.counter}}</a></td>
+			<td><a href="{% url league_rating obj.league.id %}">{{obj.league.title}}</a></td>
+			<!-- td>
+				{ if obj.league.id = leaguecompetitor.league.id }
+					<span>{obj.league.title}</span>
+				{ else }
+					<a href="{ url competitor_league obj.competitor.id obj.league.id }">{obj.league.title}</a>
+				{ endif }
+			</td-->
+			<td>{{obj.league.start_date}}</td>
+			<td>{{obj.league.end_date}}</td>
+			<td>{{obj.rival_count}}</td>
+			<td>{{obj.game_count}}</td>
+            <td>{{obj.league.leaguecompetitor_set.count}}</td>
+			<td>{{obj.league.valid_games.count}}</td>
+			<!-- td><a href="{ url league_rating obj.league.id }">&rarr;</a></td-->
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+</div>
+
+{% if leaguecompetitor %}
+	<br/>
+	<h3>{{leaguecompetitor.league.title}}</h3>
+	<br/>
+	<div id="params">
+      <div class="current-state">
+	  {% if not leaguecompetitor.league.is_ended %}
+      <p><span class="rating-date-info">{% trans "По состоянию на" %} {{current_rating_datetime}}</span><p>
+	  {% else %}
+      <p><span>{% trans "Итоговое место" %}: </span>
+      <span>
+        <strong>
+        {% if leaguecompetitor.tournament_place %}
+            {{leaguecompetitor.tournament_place}} ({% trans "Категория " %}{{ leaguecompetitor.get_tournament_category }})
+        {% else %}
+            -
+        {% endif %}
+        </strong>
+      </span>
+      </p>
+      {% endif %}
+      <p><span>{% trans "Рейтинг" %}: </span><span><strong>{{leaguecompetitor.current_state_rating|floatformat:2}}</strong></span></p>
+	  <p><span>{% trans "Место в рейтинге" %}: </span><span><strong>{{leaguecompetitor.place}}</strong></span></p>
+	  {% if not leaguecompetitor.league.is_ended %}
+      </div>
+	  <p><span>{% trans "Текущий рейтинг" %}: </span><span><strong>{{leaguecompetitor.rating|floatformat:2}}</strong></span></p>
+      {% endif %}
+	  <p><span>{% trans "Количество сыгранных игр" %}: </span><span><strong>{{leaguecompetitor.game_count}}</strong></span></p>
+	  <p><span>{% trans "Количество соперников" %}: </span><span><strong>{{leaguecompetitor.rival_count}}</strong></span></p>
+	  {% if leaguecompetitor.league.is_ended %}
+      </div>
+      {% endif %}
+	</div>
+	
+	<table>
+		<theader>
+		<th>{% trans "№" %}</th>
+		<th>{% trans "Игрок1" %}</th>
+		<th></th>
+		<th>{% trans "Игрок2" %}</th>
+		<th>{% trans "Счет" %}</th>
+		<th>+/-</th>
+		<th>{% trans "Дата" %}</th>
+		</theader>
+		<tbody>
+			{% for obj in rr %} 
+            <tr>
+			{% if obj.game %}
+				<td><strong>{{ obj.number }}</strong></td>
+				<td><a href="{% url competitor_league obj.game.player1.id obj.game.league.id %}" class="{{obj.game.result1|win_or_lose:obj.game.result2}}">{{obj.game.player1.lastName}} {{obj.game.player1.firstName}}</a></td>
+				<td><a href="{% url competitors_vs obj.game.player1.id obj.game.player2.id %}">vs.</a></td>
+				<td><a href="{% url competitor_league obj.game.player2.id obj.game.league.id %}" class="{{obj.game.result2|win_or_lose:obj.game.result1}}">{{obj.game.player2.lastName}} {{obj.game.player2.firstName}}</a></td>
+				
+				<td><strong>{{obj.game.result1}}:{{obj.game.result2}}</strong></td>
+				{% autoescape off %}
+				<td><strong>{{obj.delta|floatformat:2|show_floatformat_sign}}</strong></td>
+				{% endautoescape %}
+				<td><strong>{{obj.game.end_datetime}}</strong></td>
+            {% else %}
+                <td colspan="5">{% trans "Правило 2-х новых соперников в месяц" %}</td>
+                {% autoescape off %}
+				<td><strong>{{obj.delta|floatformat:2|show_floatformat_sign}}</strong></td>
+				{% endautoescape %}
+                <td>{{obj.datetime}}</td>
+			{% endif %}
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+	<div id="chart_div" style="width: 900px; height: 500px;"></div>
+{% endif %}
+
+{% endblock %}

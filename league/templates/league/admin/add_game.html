@@ -1,0 +1,9 @@
+{% extends "admin/change_form.html" %}
+{% load league_tags %}
+{% block extrahead %}{{ block.super }}
+<script type="text/javascript">
+    var FORCE_SCRIPT_NAME = '{% settings_value 'FORCE_SCRIPT_NAME' %}';
+</script>
+{% endblock %}
+
+

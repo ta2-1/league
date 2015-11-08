@@ -1,0 +1,70 @@
+{% extends "rating/tournaments.html" %}
+
+{% load i18n rating_tags %}
+
+{% block title %}
+{% trans "Рейтинг" %} ({% trans "категория" %} {{category.title}}) — {{block.super}}
+{% endblock %}
+
+{% block extrastyle %}
+	{{ block.super }}
+    <style type="text/css">
+        tr.no-place {
+            display: table-row;
+        }
+        #data.show-only tr.no-place {
+            display: none;
+        }
+        .filter {
+            margin-bottom: 10px;
+        }
+    </style>
+{% endblock %}
+{% block extrahead %}
+    {{ block.super }}
+    <script type="text/javascript" src="/static/admin/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/admin/js/jquery.init.js"></script>
+    <script type="text/javascript">
+        $ = django.jQuery;
+        $(document).ready(function(){
+            $('#show-only').change(function(){ 
+                $('#data').toggleClass('show-only', $('#show-only').is(':checked'));
+            });
+        });
+    </script>
+{% endblock %}
+{% block content %}
+<div class="filter"><label><input id="show-only" type="checkbox" checked="checked"/> {% trans "Показывать участников только с присвоенным местом" %}</label><br/></div>
+<table id="data" class="show-only">
+	<tr>
+    <th>{% trans "Место" %}</th>
+	<th>{% trans "Фамилия и Имя" %}</th>
+	<th>{% trans "Рейтинг" %}</th>
+	<th class="td_delta">+/-</th>
+	{% for rs in result_sets %}
+		<th class="td_date"><a href="{% url resultset rs.tournament.id category.id %}">{{ rs.tournament.start_date }}</a></th>
+	{% endfor %}
+	</tr>
+    <tbody>
+		{% for obj in competitors %} 
+        <tr {%if category not in obj.object.categories.all or obj.place == '' %}class="no-place"{%endif%}>
+			<td><strong>{%if category in obj.object.categories.all %}{{obj.place|stringformat:"s"}}{%else%}-{%endif%}</strong></td>
+			<td class="td_name">
+                <a href="{{obj.object.get_absolute_url}}">{{obj.object.id|get_competitor_attr:"lastName"}} {{obj.object.id|get_competitor_attr:"firstName"}} {% if obj.object.categories.count > 1 %}({% endif %}{%for c in obj.object.categories.all %}{%if category.id != c.id %}{{c.title}}{%endif%}{%endfor%}{%if obj.object.categories.count > 1%}){%endif%}</a>
+            </td>
+			<td><strong>{{obj.rating}}</strong></td>
+			<td>
+				{% autoescape off %}
+					{%if obj.object.category.id == category.id %}
+						{{obj.place_delta|show_arrow}}
+					{%else%}*{%endif%}/{{obj.rating_delta|show_sign}}
+				{% endautoescape %}
+			</td>
+			{% for r in obj.results %}
+				<td>{%if r.0.place %}{{ r.0.place }} / {{ r.0.points }}{%else%}-{%endif%}</td>
+			{% endfor %}
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+{% endblock %}

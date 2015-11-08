@@ -1,0 +1,32 @@
+{% extends "league/leagues.html" %}
+
+{% load i18n %}
+
+{% block title %}
+{% trans "Все лиги" %} — {{block.super}}
+{% endblock %}
+
+{% block content %}
+<table>
+	<theader>
+	<th>{% trans "№" %}</th>
+	<th>{% trans "Название лиги" %}</th>
+	<th>{% trans "Дата начала" %}</th>
+	<th>{% trans "Дата окончания" %}</th>
+	<th>{% trans "Количество участников" %}</th>
+	<th>{% trans "Количество игр" %}</th>
+	</theader>
+	<tbody>
+		{% for obj in object_list|dictsort:"start_date" %} 
+		<tr>
+			<td>{{forloop.counter}}</td>
+			<td><a href="{% url league_rating obj.id %}">{{obj.title}}</a></td>
+			<td>{{obj.start_date}}</td>
+			<td>{{obj.end_date}}</td>
+			<td>{{obj.leaguecompetitor_set.count}}</td>
+			<td>{{obj.valid_games.count}}</td>
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+{% endblock %}

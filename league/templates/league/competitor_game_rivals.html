@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load i18n rating_tags %}
+
+{% block head-title %} {{object.firstName }} {{object.lastName }} — {{block.super}} {% endblock %}
+
+
+{% block title %}
+{{object.firstName }} {{object.lastName }} — {% trans "Выбор соперника" %} — {{block.super}}
+{% endblock %}
+
+
+{% block content_title %}
+<h1>{{object.firstName}} {{object.lastName}}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="tabs">
+	<ul>
+		<li>
+			<a href="{% url competitor object.id %}">{% trans "Турниры" %}</a>
+		</li>
+		<li>
+			<a href="{% url competitor_leagues object.id %}">{% trans "Лига" %}</a>
+		</li>
+        <li>
+			<a href="{% url competitor_rivals object.id %}">{% trans "Статистика матчей" %}</a>
+		</li>
+		<li class="selected">
+            <a href="{% url competitor_game_rivals object.id lc.league.id %}">{% trans "Выбор соперника" %}</a>
+        </li>
+	</ul>
+</div>
+    <br/>
+	<h3>{{lc.league.title}}</h3>
+    <br/>
+    <div id="params">
+	  <div class="current-state">
+      <p><span class="rating-date-info">{% trans "По состоянию на" %} {{current_rating_datetime}}</span><p>
+      <p><span>{% trans "Рейтинг" %}: </span><span><strong>{{lc.current_state_rating|floatformat:2}}</strong></span></p>
+	  <p><span>{% trans "Место" %}: </span><span><strong>{{lc.place}}</strong></span></p>
+      </div>
+      <p><span>{% trans "Текущий рейтинг" %}: </span><span><strong>{{lc.rating|floatformat:2}}</strong></span></p>
+      <p><span>{% trans "Количество сыгранных игр" %}: </span><span><strong>{{lc.game_count}}</strong></span></p>
+	  <p><span>{% trans "Количество соперников" %}: </span><span><strong>{{lc.rival_count}}</strong></span></p>
+	</div>
+	
+    <br/>
+	<h3>Возможные соперники</h3>
+    <br/>
+	<table>
+		<theader>
+		<th>{% trans "№" %}</th>
+		<th>{% trans "Фамилия и Имя" %}</th>
+		<th>{% trans "Место" %}</th>
+		<th>{% trans "Рейтинг" %}<br/><span class="small">({% trans "на" %} {{current_rating_datetime}})</span></th>
+		<th>{% trans "Текущий рейтинг" %}</th>
+		
+        <th>{% trans "3 : 0" %}</th>
+		<th>{% trans "3 : 1" %}</th>
+		<th>{% trans "3 : 2" %}</th>
+        
+		<th>{% trans "2 : 3" %}</th>
+		<th>{% trans "1 : 3" %}</th>
+		<th>{% trans "0 : 3" %}</th>
+        </theader>
+		<tbody>
+			{% for r in rivals %} 
+			<tr>
+				<td><strong>{{ forloop.counter }}</strong></td>
+				<td><a href="{% url competitor_league r.object.id lc.league.id %}">{{r.object.lastName}} {{r.object.firstName}}</a></td>
+				<td><strong>{{ r.place }}</strong></td>
+				<td><strong>{{ r.rating|floatformat:2 }}</strong></td>
+				<td><strong>{{ r.live_rating|floatformat:2 }}</strong></td>
+                {% for g in r.results %}
+                    <td>{% autoescape off %}{{g.delta|floatformat:2|show_floatformat_sign}}{% endautoescape %}</td>
+                {% endfor %}
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+
+{% endblock %}

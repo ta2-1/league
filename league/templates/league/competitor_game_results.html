@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load i18n rating_tags %}
+
+{% block head-title %} {{object.firstName }} {{object.lastName }} — {{block.super}} {% endblock %}
+
+
+{% block title %}
+{{object.firstName }} {{object.lastName }} — {% trans "Выбор соперника" %} — {{block.super}}
+{% endblock %}
+
+
+{% block content_title %}
+<h1>{{object.firstName}} {{object.lastName}} vs. {{rival.competitor.firstName}} {{rival.competitor.lastName}}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="tabs">
+	<ul>
+		<li>
+			<a href="{% url competitor object.id %}">{% trans "Турниры" %}</a>
+		</li>
+		<li>
+			<a href="{% url competitor_leagues object.id %}">{% trans "Лига" %}</a>
+		</li>
+        <li>
+			<a href="{% url competitor_rivals object.id %}">{% trans "Статистика матчей" %}</a>
+		</li>
+		<li class="selected">
+            <a href="{% url competitor_game_rivals object.id lc.league.id %}">{% trans "Выбор соперника" %}</a>
+        </li>
+	</ul>
+</div>
+    
+    <h3>Возможные результаты</h3>
+    <br/>
+	<table>
+		<theader>
+		<th>{% trans "Счет" %}</th>
+		<th>{% trans "Очки" %}</th>
+		</theader>
+		<tbody>
+			{% for r in results %} 
+			<tr>
+				<td><strong>{{ r.res1 }} : {{ r.res2 }}</strong></td>
+				<td><strong>{{ r.delta }}</strong></td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}
+{{object.firstName }} {{object.lastName }} — {% trans "Турниры" %} — {{block.super}}
+{% endblock %}
+
+{% block content_title %}
+<h1>{{object.firstName}} {{object.lastName}}</h1>
+{% endblock %}
+{% block content %}
+<div class="tabs">
+	<ul>
+		<li class="selected">
+			<a href="{% url competitor object.id %}">{% trans "Турниры" %}</a>
+		</li>
+		{% if object.leaguecompetitor_set.count > 0 %}
+        <li>
+            <a href="{% url competitor_leagues object.id %}">{% trans "Лига" %}</a>
+		</li>
+		<li>
+			<a href="{% url competitor_rivals object.id %}">{% trans "Статистика матчей" %}</a>
+		</li>
+        {% if league %}
+        <li>
+            <a href="{% url competitor_game_rivals object.id league.id %}">{% trans "Выбор соперника" %}</a>
+        </li>
+        {% endif %}
+        {% endif %}
+	</ul>
+</div>
+
+<div id="params">
+  <p><span>{% trans "Категория" %}:</span> {%for cat in object.categories.all %}{% if not forloop.first %}<span>, </span>{% endif %}<a href="{% url category cat.id %}">{{ cat }}</a>{% endfor %}</p> 
+  <p><span>{% trans "Рейтинг" %}: </span><span><strong>{{ object.rating }}</strong></span></p>
+  <p><span>{% trans "Место в рейтинге" %}: </span><span><strong>{{ object.place }}</strong></span></p>
+</div>
+<div id="table">
+<table>
+	<theader>
+	<th>{% trans "№" %}</th>
+	<th class="tournament-name">{% trans "Турнир" %}</th>
+	<th class="tournament-date">{% trans "Дата" %}</th>
+	<th class="tournament-place">{% trans "Место проведения" %}</th>
+	<th>{% trans "Категория" %}</th>
+	<th>{% trans "Занятое место" %}</th>
+	<th>{% trans "Количество участников" %}</th>
+	<th>{% trans "Очки" %}</th>
+	</theader>
+	<tbody>
+		{% for r in object.resultset_points|dictsortreversed:"0.resultset.tournament.start_date" %} 
+		<tr>
+			<td>{{forloop.counter}}</td>
+			<td><a href="{% url resultset r.0.resultset.tournament.id r.0.resultset.category.id %}">{{ r.0.resultset.tournament }}</a></td>
+			<td><span>{{ r.0.resultset.tournament.get_date }}</span></td>
+			<td><span>{% for l in r.0.resultset.locations__set.all%}{{ l }}{%if not forloop.last%}, {%endif%}{%endfor%}</span></td>
+			<td><span>{{ r.0.resultset.category }}</span></td>
+			<td><span>{{ r.0.place }}</span></td>
+			<td><span> {{ r.0.resultset.competitors_count}}</span></td>
+			<td><span{% if r.2 %}class="rated"{% endif %}>{{ r.1 }}{% if r.2 %}*{% endif %}</span></td>
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+</div>
+<!--  div id="history">
+	<ul>
+		{% for r in rating_history %}
+		<li>{{ r }}</li>
+		{% endfor %}
+		<li></li>
+	</ul>
+</div-->
+
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "rating/tournaments.html" %}
+
+{% block title %}
+Правила расчета турнирного рейтинга — {{block.super}}
+{% endblock %}
+
+{% block content %}
+<p>Cистема рассчитывает рейтинг игроков в сквош, принимающих участие в регулярных турнирах в Москве.</p>
+<h4>Правила расчета рейтинга</h4>
+<p>
+<ol>
+{% for r in rules %}
+	<li>{{r.text}}</li>
+{% endfor %}
+</ol>
+</p>
+<p>
+<h4>Таблица №1</h4>
+<p>(M - место, N - количество участников)</p>
+<table>
+	<theader>
+	<th>N\M </th>
+	{% for pn in place_numbers %}
+	<th>{{pn}}</th>
+	{% endfor %}
+	</theader>
+	<tbody>
+		{% for pp in places %} 
+		<tr>
+			<th><strong>{{forloop.counter}}</strong></th>
+			{% for p in pp %}
+			<td>{{ p }}</td>
+			{% endfor %}
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+<h4>Таблица №2</h4>
+<p>(P - расчетное место, T - сколько турниров назад)</p>
+<table>
+	<theader>
+	<th>P\T </th>
+	{% for tn in tournament_numbers %}
+	<th>{{tn}}</th>
+	{% endfor %}
+	</theader>
+	<tbody>
+		{% for pp in points %} 
+		<tr>
+			<th><strong>{{forloop.counter}}</strong></th>
+			{% for p in pp %}
+			<td>{{ p }}</td>
+			{% endfor %}
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+
+</p>
+{% endblock %}

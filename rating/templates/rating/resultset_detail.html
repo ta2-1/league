@@ -1,0 +1,45 @@
+{% extends "rating/tournaments.html" %}
+
+{% load i18n %}
+
+{% block title %}
+{% trans "Результаты" %} ({% trans "Турнир" %} {{ object.tournament }}, {% trans "Категория" %} {{ object.category }}) — {{block.super}}
+{% endblock %}
+
+{% block content %}
+<div>
+  <p><span>{% trans "Название турнира" %}: </span><a href="{% url tournament object.tournament.id %}"><strong>{{ object.tournament.title }}</strong></a></p>
+  <p><span>{% trans "Категория" %}: </span><a href="{% url category object.category.id %}">{{object.category.title}}</a></p>
+  <p><span>{% trans "Дата" %}: </span><span><strong>{{object.tournament.get_date}}</span></strong></p>
+  <p><span>{% trans "Место" %}: </span><span><strong>{{object.locations__set.0}}</span></strong></p>
+</div>
+<br/>
+<br/>
+<div>
+<table>
+	<theader>
+		<th>{% trans "№" %}</th>
+		<th>{% trans "Участник" %}</th>
+		<th>{% trans "Место" %}</th>
+	</theader>
+	<tbody>
+
+<!-- {% regroup object.results_set.all by place as result_list %} -->
+	
+{% for r in object.results_set.all|dictsort:"rplace" %}
+	 <tr>
+	 <td>{{forloop.counter}}</td>
+	 <td class="td_name">
+	 	<a href="{{r.competitor.get_absolute_url}}">{{ r.competitor }}</a>
+	 </td>
+	 <td>
+	 	{{ r.place }}
+	 </td>
+	 </tr>
+{% endfor %}
+	</tbody>	
+</table>
+</div>
+
+
+{% endblock %}

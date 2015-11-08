@@ -1,0 +1,15 @@
+{% extends "league/leagues.html" %}
+
+{% block title %}
+{{flatpage.title}} — {{block.super}}
+{% endblock %}
+
+{% load i18n %}
+
+{% block content_title %}<h1>{{ flatpage.title }}</h1><br/>{% endblock %}
+
+{% block content %}
+{% autoescape off %}
+{{flatpage.content}}
+{% endautoescape %}
+{% endblock %}

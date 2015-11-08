@@ -1,0 +1,64 @@
+{% extends "league/rating.html" %}
+
+{% load i18n rating_tags %}
+
+{% block title %}
+{% trans "Игры" %} — {{league.title}} — {{site.name}}
+{% endblock %}
+
+{% block content_title %}
+<div style="float:left">
+<h1>{{league.title}}</h1>
+<p class="lm-date">{% trans "Даты проведения" %}: <span>{{league.start_date}}&nbsp;&dash;&nbsp;{{league.end_date}}</span></p>
+<div class="tabs">
+	<ul>
+		<li>
+			<a href="{% url league_rating league.id %}">{% trans "Лига" %}</a>
+		</li>
+		<li class="selected">
+			<a href="{% url league_games league.id %}">{% trans "Игры" %}</a>
+		</li>
+        <li>
+			<a href="{% url league_penalties league.id %}">{% trans "Штрафы" %}</a>
+		</li>
+		{% if league.is_ended %}
+		<li>
+			<a href="{% url league_results league.id %}">{% trans "Результаты" %}</a>
+		</li>	
+		{% endif %}
+    </ul>
+</div>
+</div>
+{% endblock %}
+
+{% block content %}
+{% block sponsors %}{{ block.super }}{% endblock %}
+<div style="clear:both">
+<table>
+	<tr>
+	<th>{% trans "№" %}</th>
+	<th>{% trans "Игрок1" %}</th>
+	<th></th>
+	<th>{% trans "Игрок2" %}</th>
+	<th>{% trans "Счет" %}</th>
+	<th>{% trans "Место" %}</th>
+	<th class="tournament-date">{% trans "Дата и время" %}</th>
+	</tr>
+	<tbody>
+		{% for obj in object_list|dictsortreversed:"end_datetime" %}
+		<tr>
+			<td><strong>{{ obj.number }}</strong></td>
+			<td class="td_name"><a href="{% url competitor_league obj.player1.id obj.league.id %}" class="{{obj.result1|win_or_lose:obj.result2}}">{{obj.player1.lastName}} {{obj.player1.firstName}}</a></td>
+			<td><a href="{% url competitors_vs obj.player1.id obj.player2.id %}">vs.</a></td>
+			<td class="td_name"><a href="{% url competitor_league obj.player2.id obj.league.id %}" class="{{obj.result2|win_or_lose:obj.result1}}">{{obj.player2.lastName}} {{obj.player2.firstName}}</a></td>
+				
+			
+			<td><strong>{{obj.result1}}:{{obj.result2}}</strong></td>
+			<td><strong>{{obj.location}}</strong></td>
+			<td><strong>{{obj.end_datetime}}</strong></td>
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+</div>
+{% endblock %}

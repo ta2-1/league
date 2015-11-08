@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}
+{% trans "Участники" %} — {{block.super}}
+{% endblock %}
+
+{% block content %}
+<table>
+	<theader>
+	<th>{% trans "№" %}</th>
+	<th>{% trans "Фамилия и Имя" %}</th>
+	<th>{% trans "Категория" %}</th>
+	</theader>
+	<tbody>
+		{% for obj in object_list|dictsort:"lastName"%} 
+		<tr>
+			<td>{{forloop.counter}}</td>
+			<td class="td_name"><a href="{{obj.get_absolute_url}}">{{obj.lastName}} {{obj.firstName}}</a></td>
+			<td>{% for c in obj.categories.all %}{{c}}{% if not forloop.last %}, {%endif%}{% endfor %}</td>
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "rating/tournaments.html" %}
+
+{% load i18n %}
+
+{% block title %}
+{% trans "Турниры" %} — {{block.super}}
+{% endblock %}
+
+{% block content %}
+<table>
+	<theader>
+	<th>{% trans "№" %}</th>
+	<th class="tournament-name">{% trans "Название турнира" %}</th>
+	<th class="tournament-date">{% trans "Дата проведения" %}</th>
+	<th>{% trans "Место проведения" %}</th>
+	<th class="tournament-categories">{% trans "Категории" %}</th>
+	</theader>
+	<tbody>
+		{% for obj in object_list|dictsortreversed:"start_date" %} 
+		<tr>
+			<td>{{forloop.counter}}</td>
+			<td><a href="{{obj.get_absolute_url}}">{{obj.title}}</a></td>
+			<td>{{obj.get_date}}</td>
+			<td>{{obj.resultset_set.all.0.locations__set.0}}</td>
+			<td>{%for rs in obj.resultset_set.all|dictsort:"category" %}{{rs.category}}{%if not forloop.last %}, {%endif%}{%endfor%}</td>
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "league/leagues.html" %}
+
+{% load i18n rating_tags %}
+
+{% block title %}
+{% trans "Рейтинг" %} — {{league.title}} — {{block.super}}
+{% endblock %}
+
+
+
+    
+{% block content_title %}
+<div style="float:left">
+<h1>{{league.title}}</h1>
+<p class="lm-date">{% trans "Даты проведения" %}: <span>{{league.start_date}}&nbsp;&dash;&nbsp;{{league.end_date}}</span></p>
+<div class="tabs">
+	<ul>
+		<li class="selected">
+			<a href="{% url league_rating league.id %}">{% trans 'Лига' %}</a>
+		</li>
+		<li>
+			<a href="{% url league_games league.id %}">{% trans 'Игры' %}</a>
+		</li>
+        <li>
+			<a href="{% url league_penalties league.id %}">{% trans 'Штрафы' %}</a>
+		</li>
+        {% if league.is_ended %}
+        <li>
+			<a href="{% url league_results league.id %}">{% trans 'Результаты' %}</a>
+		</li>
+        {% endif %}
+	</ul>
+</div>
+</div>
+{% endblock %}
+
+{% block content %}
+{% block sponsors %}{{ block.super }}{% endblock %}
+<div style="clear:both">
+{% if league.is_ended %}
+    <!--div class="rating-date-info">
+        {% trans "Даты проведения:" %} {% trans "с"%} {{league.start_date}} {% trans "по" %} {{league.end_date}}
+    </div-->
+{% else %}
+    <div class="rating-date-info">{% trans "По состоянию на" %}
+    {% if league_rating_datetime %}
+        {{league_rating_datetime}}
+    {% else %}
+        {{current_rating_datetime}}
+    {% endif %}
+    </div>
+{% endif %}
+
+<table>
+	<theader>
+	<th class="rating">{% trans "Место" %}</th>
+	<th>{% trans "Фамилия и Имя" %}</th>
+	<th class="rating">{% trans "Рейтинг" %}</th>
+	<th>{% trans "Количество игр" %}</th>
+	<th>{% trans "Количество соперников" %}</th>
+	<th class="tournament-date">{% trans "Дата последней игры" %}</th>
+	</theader>
+	<tbody>
+		{% for obj in rcl %} <!-- |dictsortreversed:"rating" --> 
+		<tr class="{% if forloop.last %}last{% endif%}{% if obj.lc.paid != None and obj.lc.paid == 0 %}not-paid{% endif %}">
+			<td class="rating"><strong>{{obj.place|stringformat:"s"}}</strong></td>
+			<td class="td_name"><a href="{% url competitor_league obj.lc.competitor.id obj.lc.league.id %}">{{obj.object.id|get_competitor_attr:"lastName"}} {{obj.object.id|get_competitor_attr:"firstName"}}</a></td>
+			<td class="rating"><strong>{{obj.rating|floatformat:2}}</strong></td>
+			<td><strong>{{obj.game_count}}</strong></td>
+			<td><strong>{{obj.rival_count}}</strong></td>
+			<td><strong>{{obj.last_game.end_datetime}}</strong></td>
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+</div>
+
+{% endblock %}

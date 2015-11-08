@@ -1,0 +1,53 @@
+{% extends "league/rating.html" %}
+
+{% load i18n rating_tags %}
+
+{% block title %}
+{% trans "Игры" %} — {{league.title}} — {{site.name}}
+{% endblock %}
+
+
+{% block content_title %}
+<h1>{{league.title}}</h1>
+<p class="lm-date">{% trans "Даты проведения" %}: <span>{{league.start_date}}&nbsp;&dash;&nbsp;{{league.end_date}}</span></p>
+<div class="tabs">
+	<ul>
+		<li>
+			<a href="{% url league_rating league.id %}">{% trans "Лига" %}</a>
+		</li>
+        <li>
+			<a href="{% url league_games league.id %}">{% trans "Игры" %}</a>
+		</li>
+		<li class="selected">
+			<a href="{% url league_penalties league.id %}">{% trans "Штрафы" %}</a>
+		</li>
+		{% if league.is_ended %}
+		<li>
+			<a href="{% url league_results league.id %}">{% trans "Результаты" %}</a>
+		</li>	
+		{% endif %}
+    </ul>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<table>
+	<tr>
+	<th>{% trans "№" %}</th>
+	<th>{% trans "Игрок" %}</th>
+	<th>{% trans "Штраф" %}</th>
+	<th class="tournament-date">{% trans "Дата и время" %}</th>
+	</tr>
+	<tbody>
+		{% for obj in object_list %} <!--|dictsort:"datetime, player.lastName" }-->
+		<tr>
+			<td><strong>{{ forloop.counter }}</strong></td>
+			<td class="td_name"><a href="{% url competitor_league obj.player.id obj.league.id %}" class="lose">{{obj.player.lastName}} {{obj.player.firstName}}</a></td>
+			<td>{{obj.delta}}</td>
+			<td><strong>{{obj.datetime}}</strong></td>
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+{% endblock %}

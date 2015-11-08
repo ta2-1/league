@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% load i18n rating_tags %}
+
+{% block title %}
+{{object.firstName }} {{object.lastName }} {% trans "vs." %} {{ opponent.firstName }} {{ opponent.lastName }} — {{block.super}}
+{% endblock %}
+
+{% block content_title %}
+<h1>
+	<a href="{% url competitor_leagues object.id %}">{{object.firstName}} {{object.lastName}}</a> 
+	{% trans "vs." %} 
+	<a href="{% url competitor_leagues opponent.id %}">{{ opponent.firstName }} {{ opponent.lastName }}</a> 
+</h1>
+<br/>
+{% endblock %}
+
+{% block content %}
+<!-- div class="tabs">
+	<ul>
+		<li>
+			<a href="{% url competitor object.id %}">Турниры</a>
+		</li>
+		<li>
+			<a href="{% url competitor_leagues object.id %}">Лига</a>
+		</li>
+		<li class="selected">
+			<a href="{% url competitor_rivals object.id %}">Соперники</a>
+		</li>
+	</ul>
+</div-->
+    
+	
+	<table>
+		<theader>
+		<th>{% trans "№" %}</th>
+		<th>{% trans "Игрок1" %}</th>
+		<th>{% trans "Игрок2" %}</th>
+		<th>{% trans "Счет" %}</th>
+		<th>{% trans "Дата" %}</th>
+		<th>{% trans "Лига" %}</th>
+		</theader>
+		<tbody>
+			{% for obj in games|dictsortreversed:"end_datetime" %} 
+			<tr>
+				<td><strong>{{ forloop.counter }}</strong></td>
+				<td>
+					<a href="{% url competitor_league obj.player1.id obj.league.id %}" class="{{obj.result1|win_or_lose:obj.result2}}">
+						{{obj.player1.lastName}} {{obj.player1.firstName}}
+					</a>
+				</td>
+				<td>
+					<a href="{% url competitor_league obj.player2.id obj.league.id %}" class="{{obj.result2|win_or_lose:obj.result1}}">
+						{{obj.player2.lastName}} {{obj.player2.firstName}}
+					</a>
+				</td>
+				<td><strong>{{obj.result1}}:{{obj.result2}}</strong></td>
+				<td><strong>{{obj.end_datetime}}</strong></td>
+				<td><a href="{% url league_rating obj.league.id %}">{{obj.league.title}}</a></td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+
+{% endblock %}

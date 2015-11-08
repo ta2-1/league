@@ -6,3 +6,4 @@
 *.stats
 *.pending
 .idea
+log
