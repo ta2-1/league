@@ -291,7 +291,7 @@ class Game(models.Model):
     player1 = models.ForeignKey(Competitor, verbose_name=u'Игрок1', related_name='home_game_set')
     player2 = models.ForeignKey(Competitor, verbose_name=u'Игрок2', related_name='guest_game_set')
     
-    start_datetime = models.DateTimeField(verbose_name=u'Дата и время начала')
+    start_datetime = models.DateTimeField(verbose_name=u'Дата и время начала', blank=True)
     end_datetime = models.DateTimeField(verbose_name=u'Дата и время окончания')
     
     location = models.ForeignKey(Location, verbose_name=u'Место проведения') 
@@ -306,6 +306,7 @@ class Game(models.Model):
         return u"%s - %s (%d : %d) - %s" % (self.player1.lastName, self.player2.lastName, self.result1, self.result2, self.end_datetime)
     
     def save(self, *args, **kwargs):
+        self.start_datetime = self.end_datetime
         super(Game, self).save(*args, **kwargs)
         
         if self.result1 > 0 or self.result2 > 0:
