@@ -210,8 +210,16 @@ class LeagueCompetitor(models.Model):
     def rival_count(self, date_time=None):
         dt = datetime.now() if date_time is None else date_time
         
-        gg = Game.objects.filter(Q(league=self.league, end_datetime__lte=dt, no_record=False)&(Q(player1=self.competitor)|Q(player2=self.competitor)))
-        count = Competitor.objects.filter(~Q(id=self.competitor.id)&(Q(home_game_set__in=gg)|Q(guest_game_set__in=gg))).distinct().count()
+        gg = Game.objects.filter(
+            Q(league=self.league, end_datetime__lte=dt, no_record=False)&
+            (Q(player1=self.competitor)|Q(player2=self.competitor))
+        )
+        count = Competitor.objects.filter(
+            ~Q(id=self.competitor.id)&
+            (Q(home_game_set__league=self.league)|Q(home_game_set__league__isnull=True))&
+            (Q(guest_game_set__league=self.league)|Q(guest_game_set__league__isnull=True))&
+            (Q(home_game_set__in=gg)|Q(guest_game_set__in=gg))
+        ).distinct().count()
         
         return count
     
@@ -223,9 +231,17 @@ class LeagueCompetitor(models.Model):
         if not to_date_time is None:
             filter_by.update({'end_datetime__lte': to_date_time})
 
-        gg = Game.objects.filter(Q(**filter_by)&(Q(player1=self.competitor)|Q(player2=self.competitor)))
+        gg = Game.objects.filter(
+            Q(**filter_by)&
+            (Q(player1=self.competitor)|Q(player2=self.competitor))
+        )
         
-        return Competitor.objects.filter(~Q(id=self.competitor.id)&(Q(home_game_set__in=gg)|Q(guest_game_set__in=gg))).distinct()
+        return Competitor.objects.filter(
+            ~Q(id=self.competitor.id)&
+            (Q(home_game_set__league=self.league)|Q(home_game_set__league__isnull=True))&
+            (Q(guest_game_set__league=self.league)|Q(guest_game_set__league__isnull=True))&
+            (Q(home_game_set__in=gg)|Q(guest_game_set__in=gg))
+        ).distinct()
     
     def last_game(self, date_time=None):
         dt = datetime.now() if date_time is None else date_time
