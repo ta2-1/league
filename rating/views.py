@@ -55,7 +55,7 @@ def rules(request, template_name=''):
 
 def index(request, template_name=''):
     cc = []
-    for c in Category.objects.order_by('position'):
+    for c in Category.objects.filter(show_on_main=True).order_by('position'):
         place_list = c.get_place_list()[:3]
         for p in place_list:
             p['rating_delta'] = int(p['rating']) - int(p['object'].rating_by_category(c.id, 1))  

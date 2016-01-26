@@ -122,6 +122,7 @@ class Category(models.Model):
     
     title = models.CharField(_(u'Название'), max_length=25)
     position = models.PositiveSmallIntegerField(_(u'Позиция'))
+    show_on_main = models.BooleanField(u'Показывать на главной')
 
     def __unicode__(self):
         return u"%s" % self.title
