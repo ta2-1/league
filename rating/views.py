@@ -60,7 +60,7 @@ def index(request, template_name=''):
         try:
             place_list = c.get_place_list()[:3]
             for p in place_list:
-                p['rating_delta'] = int(p['rating']) - int(p['object'].rating_by_category(c.id, 1))
+                p['rating_delta'] = int(p['rating']) - int(p['object'].rating_by_category(c, 1))
                 p1 = p['object'].place(1)
                 p['place_delta'] = (get_place(p1) - get_place(p['place'])) if p1 != '-' else 0
 
