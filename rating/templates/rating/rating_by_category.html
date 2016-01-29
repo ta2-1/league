@@ -47,10 +47,10 @@
 	</tr>
     <tbody>
 		{% for obj in competitors %} 
-        <tr {%if category not in obj.object.categories.all or obj.place == '' %}class="no-place"{%endif%}>
-			<td><strong>{%if category in obj.object.categories.all %}{{obj.place|stringformat:"s"}}{%else%}-{%endif%}</strong></td>
+        <tr {%if obj.place == '*' %}class="no-place"{%endif%}>
+			<td><strong>{%if obj.place != '*' %}{{obj.place|stringformat:"s"}}{%else%}-{%endif%}</strong></td>
 			<td class="td_name">
-                <a href="{{obj.object.get_absolute_url}}">{{obj.object.id|get_competitor_attr:"lastName"}} {{obj.object.id|get_competitor_attr:"firstName"}} {% if obj.object.categories.count > 1 %}({% endif %}{%for c in obj.object.categories.all %}{%if category.id != c.id %}{{c.title}}{%endif%}{%endfor%}{%if obj.object.categories.count > 1%}){%endif%}</a>
+                <a href="{{obj.object.get_absolute_url}}">{{obj.object.id|get_competitor_attr:"lastName"}} {{obj.object.id|get_competitor_attr:"firstName"}}</a>
             </td>
 			<td><strong>{{obj.rating}}</strong></td>
 			<td>

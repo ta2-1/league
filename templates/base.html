@@ -294,30 +294,6 @@
 				<li {% if request.path_info|match:"^/competitors" %}class="selected" {% endif %}><a href="{% url competitors %}">{% trans "Участники" %}</a></li>
 			</ul>
 		</div>
-       <script type="text/javascript">
-            function onCityChange() {
-                var s = document.getElementById('city-select');
-                if (s.value == 'irkutsk') {
-                    window.location = "/irkutsk";
-                } else if (s.value == 'vladivostok') {
-                    window.location = "/vladivostok";
-                } else {
-                    window.location = "/";
-                }
-
-
-            }
-        </script> 
-        <div id="city">
-            <label>{% trans "Выберите город:" %}</label>
-            <select id="city-select" onchange="onCityChange()">
-                <!-- {{request.path }}-->
-                <option {% if request.path|match:"^/[^iv]?" %}selected="selected" {% endif %} value="moscow">{% trans "Москва" %}</option>
-                <option {% if request.path|match:"^/vladivostok" %}selected="selected" {% endif %} value="vladivostok">{% trans "Владивосток" %}</option>
-                <option {% if request.path|match:"^/irkutsk" %}selected="selected" {% endif %} value="irkutsk">{% trans "Иркутск" %}</option>
-            </select>
-        </div>
-        
 {% endblock %}
 
 {% block usertools %}
