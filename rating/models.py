@@ -223,11 +223,13 @@ class Category(models.Model):
 
     def get_last_tournament_date(self):
         ltc = self.settings.last_tournaments_count
-        rs = ResultSet.objects.select_related('tournament') \
+        rss = ResultSet.objects.select_related('tournament') \
             .filter(category=self) \
-            .order_by('-tournament__start_date')[:ltc][ltc - 1]
-
-        return rs.date()
+            .order_by('-tournament__start_date')[:ltc]
+        count = rss.count()
+        if count < ltc:
+            return rss[count - 1].date()
+        return rss[ltc - 1].date()
 
     def get_place_dict(self, back_offset_number = 0):
         cache_key= u'place_dict_only_for_category_%d_with_offset_%d' % (self.id, back_offset_number)
