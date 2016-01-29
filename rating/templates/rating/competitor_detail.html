@@ -32,9 +32,23 @@
 </div>
 
 <div id="params">
-  <p><span>{% trans "Категория" %}:</span> {%for cat in object.categories.all %}{% if not forloop.first %}<span>, </span>{% endif %}<a href="{% url category cat.id %}">{{ cat }}</a>{% endfor %}</p> 
-  <p><span>{% trans "Рейтинг" %}: </span><span><strong>{{ object.rating }}</strong></span></p>
-  <p><span>{% trans "Место в рейтинге" %}: </span><span><strong>{{ object.place }}</strong></span></p>
+  <table>
+	  <theader>
+	    <th>{% trans "Категория" %}</th>
+	    <th>{% trans "Рейтинг" %}</th>
+      <th>{% trans "Место в рейтинге" %}</th>
+    </theader>
+    <tbody>
+      {% for cat, place, rating in object_categories %}
+        <tr>
+          <td><a href="{% url category cat.id %}">{{ cat }}</a></td>
+          <td><span>{{ rating }}</span></td>
+          <td><span>{{ place }}</span></td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
 </div>
 <div id="table">
 <table>

@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
-import settings
-from datetime import datetime
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from rating.utils import get_points,get_place, get_place_from_rating_list
-import rating.config
+from rating.utils import get_points, get_place, get_place_from_rating_list
 from django.core.cache import cache
 from django.db.models import Count
-from livesettings import config_value
 
 
 class Rule(models.Model):
@@ -44,21 +40,32 @@ class Competitor(models.Model):
         return c
     category = property(_get_category)
 
-    def correct_points_by_category(self, x, category_id, back_offset_number = 0):
-        if x.resultset.category.id == int(category_id): 
-            return get_points(x, back_offset_number)
-        else:
-            return (x, 0, False) 
-            
-    def resultset_points_by_category(self, category_id, back_offset_number = 0):
-        cache_key= u'resultset_points_of_competitor_%d_by_category_%d_with_offset_%d' % (self.id, category_id, back_offset_number)
+    def categories(self):
+        category_ids = [
+            x[0] for x in ResultSet.objects. \
+            filter(competitors__id=self.id). \
+            values_list('category').distinct()]
+        return Category.objects.filter(id__in=category_ids)
+
+    def resultset_points_by_category(self, category, back_offset_number=0):
+        cache_key= u'resultset_points_of_competitor_%d_by_category_%d_with_offset_%d' % (self.id, category.id, back_offset_number)
         
         r_points = cache.get(cache_key)
         if r_points is None:     
-            rrt_count = config_value('rating', 'RESULT_TOURNAMENTS_COUNT')
-    
-            r_list = list(Results.objects.filter(competitor__id=self.id, resultset__tournament__is_past=True))
-            r_points = map(lambda x: self.correct_points_by_category(x, category_id, back_offset_number), r_list)
+            rrt_count = category.settings.result_tournaments_count
+
+            r_list = list(
+                Results.objects.filter(
+                    competitor__id=self.id,
+                    resultset__category__id=category.id,
+                    resultset__tournament__is_past=True))
+            r_points = map(
+                lambda x: get_points(
+                    x,
+                    category.settings.max_competitors_count,
+                    category.settings.last_tournaments_count,
+                    back_offset_number),
+                r_list)
             
             if len(r_points) > rrt_count:
                 r_points_sorted = sorted(r_points, key=lambda x: x[1], reverse=True)
@@ -70,30 +77,31 @@ class Competitor(models.Model):
                 cache.set(cache_key, r_points, 60 * 60 * 24 * 30)
         
         return r_points 
-        
+
     def resultset_points(self):
-        return self.resultset_points_by_category(self.category.id)
-    
-    def rating_by_category(self, category_id, back_offset_number = 0):
-        cache_key= u'rating_of_competitor_%d_in_category_%d_with_offset_%d' % (self.id, category_id, back_offset_number)
+        res = []
+        for category in self.categories():
+            res += self.resultset_points_by_category(category)
+
+        return res
+
+    def rating_by_category(self, category, back_offset_number = 0):
+        cache_key= u'rating_of_competitor_%d_in_category_%d_with_offset_%d' % (self.id, category.id, back_offset_number)
         
         data = cache.get(cache_key)
         if data is None:
-            counted_points = filter(lambda x: x[2], self.resultset_points_by_category(category_id, back_offset_number))
+            counted_points = filter(lambda x: x[2], self.resultset_points_by_category(category, back_offset_number))
             counted_points = map(lambda x: x[1], counted_points)
             data = sum(counted_points)
             cache.set(cache_key, data, 60 * 60 * 24 * 30)
         
         return data
-            
-    def rating(self):
-        return self.rating_by_category(self.category.id)
-    
-    def place(self, back_offset_number = 0):  
-        cache_key= u'place_of_competitor_%d_in_category_%d' % (self.id, self.category.id)
+
+    def place_by_category(self, category, back_offset_number = 0):
+        cache_key= u'place_of_competitor_%d_in_category_%d' % (self.id, category.id)
         data = cache.get(cache_key)
         if data is None:
-            rating_list = self.category.get_rating_list(back_offset_number)
+            rating_list = category.get_rating_list(back_offset_number)
             for i,x in enumerate(rating_list):
                 if x['object'] == self:
                     data = get_place_from_rating_list(rating_list, i)
@@ -111,9 +119,39 @@ class Competitor(models.Model):
         return ('competitor', [], {
             'object_id': self.id,
         })
-            
 
-    
+
+class CategorySettings(models.Model):
+    class Meta:
+        verbose_name = u'Параметры расчета рейтинга для категории'
+        verbose_name_plural = u'Параметры расчета рейтинга для категории'
+
+    title = models.CharField(
+        max_length=255,
+        verbose_name=u'Наименование',
+    )
+
+    max_competitors_count = models.PositiveIntegerField(
+        verbose_name=u'Количество участников',
+        help_text = u'Максимальное количество участников в турнире',
+        default=32,
+    )
+
+    last_tournaments_count = models.PositiveIntegerField(
+        verbose_name = u'Количество турниров до обнуления результатов',
+        default = 8,
+    )
+
+    result_tournaments_count = models.PositiveIntegerField(
+        verbose_name = u'Учитываемое количество турниров',
+        help_text = u'Результаты скольких последних турниров учитываются при расчете рейтинга участника',
+        default = 4
+    )
+
+    def __unicode__(self):
+        return u"%s" % self.title
+
+
 class Category(models.Model):
     class Meta:
         verbose_name = _(u'Категория участника')
@@ -123,6 +161,7 @@ class Category(models.Model):
     title = models.CharField(_(u'Название'), max_length=25)
     position = models.PositiveSmallIntegerField(_(u'Позиция'))
     show_on_main = models.BooleanField(u'Показывать на главной')
+    settings = models.ForeignKey(CategorySettings)
 
     def __unicode__(self):
         return u"%s" % self.title
@@ -140,8 +179,8 @@ class Category(models.Model):
         cache_key= u'rating_list_only_for_category_%d_with_offset_%d' % (self.id, back_offset_number)
         data = cache.get(cache_key)
         if data is None:
-            tdata = map(lambda x: { 'object':x, 'rating':x.rating_by_category(self.id, back_offset_number) }, 
-                       Competitor.objects.filter(categories__id=self.id))                     
+            tdata = map(lambda x: { 'object':x, 'rating':x.rating_by_category(self, back_offset_number) },
+                       Competitor.objects.filter(resultsets__category__id=self.id))
 
             tdata = sorted(tdata, key=lambda x: x['rating'], reverse=True)
             data = []
@@ -161,7 +200,7 @@ class Category(models.Model):
         data = cache.get(cache_key)
         
         if data is None:
-            data = map(lambda x: { 'object':x, 'rating':x.rating_by_category(self.id, back_offset_number) }, 
+            data = map(lambda x: { 'object':x, 'rating':x.rating_by_category(self, back_offset_number) },
                        Competitor.objects.filter(categories__id=self.id))                     
 
             data = sorted(data, key=lambda x: x['rating'], reverse=True)
@@ -173,17 +212,33 @@ class Category(models.Model):
             
         return data
 
+    def get_last_tournament_date(self):
+        ltc = self.settings.last_tournaments_count
+        rs = ResultSet.objects.select_related('tournament') \
+            .filter(category=self) \
+            .order_by('-tournament__start_date')[:ltc][ltc - 1]
+
+        return rs.date()
+
     def get_place_dict(self, back_offset_number = 0):
         cache_key= u'place_dict_only_for_category_%d_with_offset_%d' % (self.id, back_offset_number)
         data = cache.get(cache_key)
         
         if data is None:
-            tdata = map(lambda x: { 'object':x, 'rating':x.rating_by_category(self.id, back_offset_number) }, 
-                       Competitor.objects.filter(categories__id=self.id))                     
+            tdata = map(
+                lambda x: {
+                    'object': x,
+                    'rating': x.rating_by_category(self, back_offset_number)},
+                Competitor.objects.filter(
+                    resultsets__category__id=self.id,
+                    resultsets__tournament__start_date__gte=self.get_last_tournament_date()
+                ).annotate(
+                    c=Count('resultsets__id')
+                ).filter(c__gte=self.settings.result_tournaments_count))
 
             tdata = sorted(tdata, key=lambda x: x['rating'], reverse=True)
             data = {}
-            for i,x in enumerate(tdata):
+            for i, x in enumerate(tdata):
                 data = dict(data, **{ x['object'].id: {'place': get_place_from_rating_list(tdata, i), 'rating': x['rating']}})
                 
             cache.set(cache_key, data, 60 * 60 * 24 * 30)
@@ -194,8 +249,13 @@ class Category(models.Model):
         cache_key= u'rating_list_by_results_for_category_%d_with_offset_%d' % (self.id, back_offset_number)
         data = cache.get(cache_key)
         if data is None:
-            tdata = map(lambda x: { 'object':x, 'rating':x.rating_by_category(self.id, back_offset_number) }, 
-                       Competitor.objects.filter(results__resultset__category__id=self.id, results__resultset__tournament__is_past=True).distinct())                     
+            tdata = map(
+                lambda x: {
+                    'object':x,
+                    'rating':x.rating_by_category(self, back_offset_number)},
+                Competitor.objects.filter(
+                    results__resultset__category__id=self.id,
+                    results__resultset__tournament__is_past=True).distinct())
 
             tdata = sorted(tdata, key=lambda x: x['rating'], reverse=True)
             data = {}
@@ -310,10 +370,12 @@ class Results(models.Model):
         return get_place(self.place)
     
     def points(self):
-        p = get_points(self) 
+        p = get_points(
+            self,
+            self.resultset.category.settings.max_competitors_count,
+            self.resultset.category.settings.last_tournaments_count)
         return p[1]
     
-        
+
     #def __unicode__(self):
     #    return u"%s: %s  (%s)" %  (str(self.resultset.tournament), str(self.competitor), str(self.place))
-

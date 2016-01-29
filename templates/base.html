@@ -289,8 +289,8 @@
 {% block nav-global %}
 		<div id="menu">
 			<ul>
-				<li {% if request.path_info|match:"^/tournaments" %}class="selected" {% endif %}><a href="{% url tournaments %}">{% trans "Турнирный рейтинг" %}</a></li>
-				<li {% if request.path_info|match:"^/leagues" %}class="selected" {% endif %}><a href="{% url leagues %}">{% trans "Рейтинг лиги" %}</a></li>
+				<li {% if request.path_info|match:"^/tournaments" %}class="selected" {% endif %}><a href="{% url tournaments %}">{% trans "Рейтинг игроков в сквош" %}</a></li>
+				<li {% if request.path_info|match:"^/leagues" %}class="selected" {% endif %}><a href="{% url leagues %}">{% trans "Московская сквош-лига" %}</a></li>
 				<li {% if request.path_info|match:"^/competitors" %}class="selected" {% endif %}><a href="{% url competitors %}">{% trans "Участники" %}</a></li>
 			</ul>
 		</div>

@@ -1,11 +1,9 @@
-from datetime import timedelta, time, datetime
+from datetime import timedelta, datetime
 from functools import wraps
 import logging
 import re
 
 from django.db.models import Q
-
-from livesettings import config_value
 
 from django.core.cache import get_cache
 

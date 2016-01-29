@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import settings
 import re
-from datetime import datetime
-#from rating.models import *
-from livesettings import config_value
 
 def get_place(place):
     if re.match(r'^\d+$', str(place)) != None:
@@ -64,33 +60,24 @@ def get_place_from_list(place_list, competitor_id):
     
     return res
 
-def get_points_by_params(object, r_place, t_number):
-    rmc_count = config_value('rating', 'MAX_COMPETITORS_COUNT')    
-    rlt_count = config_value('rating', 'LAST_TOURNAMENTS_COUNT')
-    
-    #X = eval(config_value('rating', 'X'))
-    #Y = eval(config_value('rating', 'Y'))
+def get_points_by_params(object, r_place, t_number, rmc_count, rlt_count):
     Y = rmc_count - r_place + 1
     X = rlt_count - t_number + 1
-    
- 
+
     if t_number > rlt_count:
         return (object, 0, False) #(competitor_object, rating_value, included in result)
     elif t_number <= 0:
         return (object, 0, False)
     else:
         return (object, int(Y*(Y-1)*rlt_count/2 + X*Y), True)
-        #return (object, int(eval(config_value('rating_main_formula', 'MAIN_FORMULA_VALUE'))), True)
     
-def get_points(object, back_offset_number=0):
+def get_points(object, rmc_count, rlt_count, back_offset_number=0):
     place = get_place(object.place)
     tc_count = object.resultset.competitors.count()
     t_number = object.resultset.sequence_number() - back_offset_number
-    rmc_count = config_value('rating', 'MAX_COMPETITORS_COUNT')    
-    rlt_count = config_value('rating', 'LAST_TOURNAMENTS_COUNT')
-    r_place = int(round(place * rmc_count / tc_count))#eval(config_value('rating', 'R_PLACE'))
+    r_place = int(round(place * rmc_count / tc_count))
     
-    return get_points_by_params(object, r_place, t_number)
+    return get_points_by_params(object, r_place, t_number, rmc_count, rlt_count)
     
     #4224-((66-rplace)*(rplace-1)*4+(number-1)*(33-rplace)
     

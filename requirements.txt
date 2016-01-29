@@ -6,8 +6,6 @@ django-allauth==0.4.0
 django-email-confirmation==0.2
 django-extensions==0.9
 django-google-analytics==1
-django-keyedcache==1.4-1
-django-livesettings==1.4-7
 django-modeltranslation==0.3.3
 django-registration==0.7
 django-rosetta==0.6.2

@@ -65,8 +65,7 @@ urlpatterns = patterns('',
     
     url(r'^accounts/', include('allauth.urls')),
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^settings/', include('livesettings.urls')),
-    
+
     url(r'^rosetta/', include('rosetta.urls')),
     #url(r'^admin_tools/', include('admin_tools.urls')),
 )
