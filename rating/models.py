@@ -200,8 +200,17 @@ class Category(models.Model):
         data = cache.get(cache_key)
         
         if data is None:
-            data = map(lambda x: { 'object':x, 'rating':x.rating_by_category(self, back_offset_number) },
-                       Competitor.objects.filter(categories__id=self.id))                     
+            data = map(
+                lambda x: {
+                    'object':x,
+                    'rating':x.rating_by_category(self, back_offset_number)
+                },
+                Competitor.objects.filter(
+                    resultsets__category__id=self.id,
+                    resultsets__tournament__start_date__gte=self.get_last_tournament_date()
+                ).annotate(
+                    c=Count('resultsets__id')
+                ).filter(c__gte=self.settings.result_tournaments_count))
 
             data = sorted(data, key=lambda x: x['rating'], reverse=True)
             
