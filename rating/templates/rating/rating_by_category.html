@@ -55,9 +55,7 @@
 			<td><strong>{{obj.rating}}</strong></td>
 			<td>
 				{% autoescape off %}
-					{%if obj.object.category.id == category.id %}
-						{{obj.place_delta|show_arrow}}
-					{%else%}*{%endif%}/{{obj.rating_delta|show_sign}}
+					{{obj.place_delta|show_arrow}}/{{obj.rating_delta|show_sign}}
 				{% endautoescape %}
 			</td>
 			{% for r in obj.results %}

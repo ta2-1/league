@@ -108,7 +108,7 @@ class Competitor(models.Model):
                                                      
                     break
             else:
-                data = None
+                data = '-'
             
             cache.set(cache_key, data, 60 * 60 * 24 * 30)
             
@@ -179,8 +179,17 @@ class Category(models.Model):
         cache_key= u'rating_list_only_for_category_%d_with_offset_%d' % (self.id, back_offset_number)
         data = cache.get(cache_key)
         if data is None:
-            tdata = map(lambda x: { 'object':x, 'rating':x.rating_by_category(self, back_offset_number) },
-                       Competitor.objects.filter(resultsets__category__id=self.id))
+            tdata = map(
+                lambda x: {
+                    'object':x,
+                    'rating':x.rating_by_category(self, back_offset_number)
+                },
+                Competitor.objects.filter(
+                    resultsets__category__id=self.id,
+                    resultsets__tournament__start_date__gte=self.get_last_tournament_date()
+                ).annotate(
+                    c=Count('resultsets__id')
+                ).filter(c__gte=self.settings.result_tournaments_count))
 
             tdata = sorted(tdata, key=lambda x: x['rating'], reverse=True)
             data = []
