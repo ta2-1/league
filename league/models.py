@@ -214,15 +214,25 @@ class LeagueCompetitor(models.Model):
             Q(league=self.league, end_datetime__lte=dt, no_record=False)&
             (Q(player1=self.competitor)|Q(player2=self.competitor))
         )
-        count = Competitor.objects.filter(
-            ~Q(id=self.competitor.id)&
-            (Q(home_game_set__league=self.league)|Q(home_game_set__league__isnull=True))&
-            (Q(guest_game_set__league=self.league)|Q(guest_game_set__league__isnull=True))&
-            (Q(home_game_set__in=gg)|Q(guest_game_set__in=gg))
-        ).distinct().count()
-        
-        return count
-    
+
+        rivals = {}
+        for g in gg:
+            if g.player1 != self.competitor:
+                player = g.player1
+            else:
+                player = g.player2
+            rivals[player.id] = player
+
+        return len(rivals.keys())
+        #count = Competitor.objects.filter(
+        #    ~Q(id=self.competitor.id)&
+        #    (Q(home_game_set__league=self.league)|Q(home_game_set__league__isnull=True))&
+        #    (Q(guest_game_set__league=self.league)|Q(guest_game_set__league__isnull=True))&
+        #    (Q(home_game_set__in=gg)|Q(guest_game_set__in=gg))
+        #).distinct().count()
+        #
+        #return count
+
     # for games where no_record is false
     def rivals(self, from_date_time=None, to_date_time=None):
         filter_by = {'league': self.league, 'no_record': False}
@@ -235,14 +245,24 @@ class LeagueCompetitor(models.Model):
             Q(**filter_by)&
             (Q(player1=self.competitor)|Q(player2=self.competitor))
         )
-        
-        return Competitor.objects.filter(
-            ~Q(id=self.competitor.id)&
-            (Q(home_game_set__league=self.league)|Q(home_game_set__league__isnull=True))&
-            (Q(guest_game_set__league=self.league)|Q(guest_game_set__league__isnull=True))&
-            (Q(home_game_set__in=gg)|Q(guest_game_set__in=gg))
-        ).distinct()
-    
+
+        rivals = {}
+        for g in gg:
+            if g.player1 != self.competitor:
+                player = g.player1
+            else:
+                player = g.player2
+            rivals[player.id] = player
+
+        return rivals.values()
+
+        #return Competitor.objects.filter(
+        #    ~Q(id=self.competitor.id)&
+        #    (Q(home_game_set__league=self.league)|Q(home_game_set__league__isnull=True))&
+        #    (Q(guest_game_set__league=self.league)|Q(guest_game_set__league__isnull=True))&
+        #    (Q(home_game_set__in=gg)|Q(guest_game_set__in=gg))
+        #).distinct()
+
     def last_game(self, date_time=None):
         dt = datetime.now() if date_time is None else date_time
         
