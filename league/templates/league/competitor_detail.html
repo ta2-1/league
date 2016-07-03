@@ -43,25 +43,19 @@
     </script>
 {% endblock %}
 
-{% block content_title %}
-<h1>{{object.firstName}} {{object.lastName}}</h1>
-{% endblock %}
-
 {% block content %}
+  <h1>{{object.firstName}} {{object.lastName}}</h1>
 <div class="tabs">
 	<ul>
 		<li>
-			<a href="{% url competitor object.id %}">{% trans "Турниры" %}</a>
+			<a href="{% url "competitor" object.id %}">{% trans "Турниры" %}</a>
 		</li>
 		<li class="selected">
-			<a href="{% url competitor_leagues object.id %}">{% trans "Лига" %}</a>
+			<a href="{% url "competitor_leagues" object.id %}">{% trans "Лига" %}</a>
 		</li>
 		<li>
-			<a href="{% url competitor_rivals object.id %}">{% trans "Статистика матчей" %}</a>
+			<a href="{% url "competitor_rivals" object.id %}">{% trans "Статистика матчей" %}</a>
 		</li>
-        <li>
-            <a href="{% url competitor_game_rivals object.id leaguecompetitor.league.id %}">{% trans "Выбор соперника" %}</a>
-        </li>
 	</ul>
 </div>
     
@@ -80,9 +74,9 @@
 	</theader>
 	<tbody>
 		{% for obj in leaguecompetitors %} 
-		<tr {% if obj.league.id = leaguecompetitor.league.id %} class="selected" {% endif %}>
-			<td><a href="{% url competitor_league obj.competitor.id obj.league.id %}">{{forloop.counter}}</a></td>
-			<td><a href="{% url league_rating obj.league.id %}">{{obj.league.title}}</a></td>
+		<tr {% if obj.league.id == leaguecompetitor.league.id %} class="selected" {% endif %}>
+			<td><a href="{% url "competitor_league" obj.competitor.id obj.league.id %}">{{forloop.counter}}</a></td>
+			<td><a href="{% url "league_rating" obj.league.id %}">{{obj.league.title}}</a></td>
 			<!-- td>
 				{ if obj.league.id = leaguecompetitor.league.id }
 					<span>{obj.league.title}</span>
@@ -124,17 +118,12 @@
       </span>
       </p>
       {% endif %}
-      <p><span>{% trans "Рейтинг" %}: </span><span><strong>{{leaguecompetitor.current_state_rating|floatformat:2}}</strong></span></p>
+      <p><span>{% trans "Рейтинг" %}: </span><span><strong>{{leaguecompetitor.rating|floatformat:2}}</strong></span></p>
 	  <p><span>{% trans "Место в рейтинге" %}: </span><span><strong>{{leaguecompetitor.place}}</strong></span></p>
-	  {% if not leaguecompetitor.league.is_ended %}
-      </div>
-	  <p><span>{% trans "Текущий рейтинг" %}: </span><span><strong>{{leaguecompetitor.rating|floatformat:2}}</strong></span></p>
-      {% endif %}
 	  <p><span>{% trans "Количество сыгранных игр" %}: </span><span><strong>{{leaguecompetitor.game_count}}</strong></span></p>
 	  <p><span>{% trans "Количество соперников" %}: </span><span><strong>{{leaguecompetitor.rival_count}}</strong></span></p>
-	  {% if leaguecompetitor.league.is_ended %}
-      </div>
-      {% endif %}
+    <p><a href="{% url "competitor_game_rivals" leaguecompetitor.league.id object.id %}">{% trans "Выбор соперника" %}</a></p>
+	    </div>
 	</div>
 	
 	<table>
@@ -152,9 +141,9 @@
             <tr>
 			{% if obj.game %}
 				<td><strong>{{ obj.number }}</strong></td>
-				<td><a href="{% url competitor_league obj.game.player1.id obj.game.league.id %}" class="{{obj.game.result1|win_or_lose:obj.game.result2}}">{{obj.game.player1.lastName}} {{obj.game.player1.firstName}}</a></td>
-				<td><a href="{% url competitors_vs obj.game.player1.id obj.game.player2.id %}">vs.</a></td>
-				<td><a href="{% url competitor_league obj.game.player2.id obj.game.league.id %}" class="{{obj.game.result2|win_or_lose:obj.game.result1}}">{{obj.game.player2.lastName}} {{obj.game.player2.firstName}}</a></td>
+				<td><a href="{% url "competitor_league" obj.game.player1.id obj.game.league.id %}" class="{{obj.game.result1|win_or_lose:obj.game.result2}}">{{obj.game.player1.lastName}} {{obj.game.player1.firstName}}</a></td>
+				<td><a href="{% url "competitors_vs" obj.game.player1.id obj.game.player2.id %}">vs.</a></td>
+				<td><a href="{% url "competitor_league" obj.game.player2.id obj.game.league.id %}" class="{{obj.game.result2|win_or_lose:obj.game.result1}}">{{obj.game.player2.lastName}} {{obj.game.player2.firstName}}</a></td>
 				
 				<td><strong>{{obj.game.result1}}:{{obj.game.result2}}</strong></td>
 				{% autoescape off %}

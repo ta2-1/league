@@ -1,11 +1,14 @@
-from django.views.generic.list_detail import object_list, object_detail
+import json
+
 from django.shortcuts import redirect, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.template import loader, RequestContext
 from django.conf import settings
 
 from rating.models import Competitor
-from league.models import get_current_league, Game, League, LeagueCompetitor, Rating
+from rating.genericviews import DetailedWithExtraContext as DetailView, ListViewWithExtraContext as ListView
+
+from league.models import get_current_leagues, Game, League, LeagueCompetitor, Rating
 from django.db.models import Q
 from league.utils import league_get_N, league_get_DELTA, get_league_rating_datetime
 
@@ -30,56 +33,47 @@ def flatpage(request, template_name='league/flatpage.html'):
     },)
     
     return HttpResponse(t.render(c))
-    
+
+
 @never_cache
-def leagues(request):
-    league = get_current_league()
-    
-    if not league.is_ended():
-        return redirect(getattr(settings, 'FORCE_SCRIPT_NAME', '') + '/leagues/%d' % league.id)
-    else:
-        return redirect(getattr(settings, 'FORCE_SCRIPT_NAME', '') + '/leagues/%d/results' % league.id )
-    
+def leagues(request, template_name):
+    ll = get_current_leagues()
+    if not leagues:
+        return redirect(getattr(settings, 'FORCE_SCRIPT_NAME', ''))
+
+    dt = datetime.now().replace(hour=0, minute=0, second=0)
+    ctx = {'leagues': []}
+
+    for l in ll:
+        if not l.is_ended() or not l.is_tournament_data_filled:
+            ctx['leagues'].append(get_league_rating_context(l, dt))
+        else:
+            ctx['leagues'].append(get_league_result_context(l))
+
+    t = loader.get_template(template_name)
+    return HttpResponse(t.render(RequestContext(request, ctx)))
+
+
 @never_cache
 def league_list(request, template_name):
-    return object_list(request, League.objects.filter(visible=True), template_name=template_name)
+    return ListView.as_view(
+        queryset=League.objects.filter(visible=True),
+        template_name=template_name
+    )(request)
 
-@never_cache
-def league_rating(request, league_id, template_name):
-    league = League.objects.get(id=league_id)
-    
-    try:
-        if request.GET.has_key('date'): 
-            date = datetime.strptime(request.GET['date'], '%d.%m.%Y')
-            
-            dt = date.replace(hour=0, minute=0, second=0) + timedelta(days=1)
-        else:
-            dt = datetime.now().replace(hour=0, minute=0, second=0)
-    except:
-        dt = datetime.now().replace(hour=0, minute=0, second=0)
-    
+
+def get_league_rating_context(league, dt):
     rcl = league.get_rating_competitor_list(dt)
-    
-    t = loader.get_template(template_name)
-
-    c = RequestContext(request, {
+    return {
         'league': league,
-        'rcl': rcl, 
-        'league_rating_datetime': dt - timedelta(days=1)
-    },)
-    
-    return HttpResponse(t.render(c))
+        'rcl': rcl,
+        'league_rating_datetime': dt
+    }
 
-@never_cache
-def league_results(request, league_id, template_name):
-    league = League.objects.get(id=league_id)
-   
-    if not league.is_ended():
-        return redirect('/leagues/%s' % league.id)
 
+def get_league_result_context(league):
     rcl = league.get_total_rating_competitor_list()
 
-    t = loader.get_template(template_name)
     if league.is_tournament_data_filled:
         rcl_a = filter(lambda x: x['lc'].tournament_category == 'A', rcl)
         rcl_b = filter(lambda x: x['lc'].tournament_category == 'B', rcl)
@@ -87,18 +81,50 @@ def league_results(request, league_id, template_name):
         rcl_a = rcl[:16]
         rcl_b = rcl[16:]
 
-    c = RequestContext(request, {
+    return {
         'league': league,
         'rcl_a': rcl_a,
         'rcl_b': rcl_b,
-        },)
-    
-    return HttpResponse(t.render(c))
+    }
+
+
+@never_cache
+def league_rating(request, league_id, template_name):
+    try:
+        if request.GET.has_key('date'):
+            date = datetime.strptime(request.GET['date'], '%d.%m.%Y')
+
+            dt = date.replace(hour=0, minute=0, second=0)
+        else:
+            dt = datetime.now()
+    except:
+        dt = datetime.now()
+
+    league = League.objects.get(id=league_id)
+    ctx = get_league_rating_context(league, dt)
+    t = loader.get_template(template_name)
+
+    return HttpResponse(t.render(RequestContext(request, ctx)))
+
+
+@never_cache
+def league_results(request, league_id, template_name):
+    league = League.objects.get(id=league_id)
+
+    if not league.is_ended():
+        return redirect('/leagues/%s' % league.id)
+
+    ctx = get_league_result_context(league)
+    t = loader.get_template(template_name)
+    return HttpResponse(t.render(RequestContext(request, ctx)))
+
 
 @never_cache
 def league_games(request, league_id, template_name):
     league = League.objects.get(id=league_id)
-    games = sorted(Game.objects.filter(league__id=league_id), key=lambda x: x.end_datetime)
+    games = Game.objects.filter(league__id=league_id) \
+                        .select_related('location', 'player1', 'player2', 'league') \
+                        .order_by('-end_datetime')
     num = 0
     for game in games:
         if not game.no_record:
@@ -114,10 +140,13 @@ def league_games(request, league_id, template_name):
     
     return HttpResponse(t.render(c))
 
+
 @never_cache
 def league_penalties(request, league_id, template_name):
     league = League.objects.get(id=league_id)
-    rr = Rating.objects.filter(league__id=league_id, type='penalty').order_by('datetime')
+    rr = Rating.objects.filter(league__id=league_id, type='penalty') \
+                       .select_related('league', 'player') \
+                       .order_by('datetime')
     t = loader.get_template(template_name)
 
     c = RequestContext(request, {
@@ -129,14 +158,24 @@ def league_penalties(request, league_id, template_name):
 
 @never_cache
 def competitor(request, league_id, competitor_id, template_name):
-    leaguecompetitors = LeagueCompetitor.objects.filter(league__visible=True, competitor__id=competitor_id).order_by('league__start_date')
-    leaguecompetitor = get_object_or_404(LeagueCompetitor, league__id=league_id, competitor__id=competitor_id)
+    leaguecompetitors = LeagueCompetitor.objects.filter(league__visible=True, competitor__id=competitor_id) \
+                                        .select_related('league', 'competitor') \
+                                        .order_by('league__start_date')
+    try:
+        leaguecompetitor = LeagueCompetitor.objects.select_related('league', 'competitor') \
+                                           .get(league__id=league_id, competitor__id=competitor_id)
+    except LeagueCompetitor.DoesNotExist:
+        raise Http404('No %s matches the given query.' % LeagueCompetitor._meta.object_name)
     
     i = 1
-    rr = list(Rating.objects.filter(player__id=competitor_id, league__id=league_id).order_by('datetime'))
+    rr = list(Rating.objects.filter(player__id=competitor_id, league__id=league_id)
+                            .select_related('competitor', 'league', 'game', 'game__player1',
+                                            'game__player2', 'game__league')
+                            .order_by('datetime')
+    )
     for r in rr:
         r.number = i
-        if (r.type == 'game' and not r.game.no_record):
+        if r.type == 'game' and r.game and not r.game.no_record:
             i += 1
     rr = list(reversed(rr))
     
@@ -166,27 +205,33 @@ def competitor_leagues(request, competitor_id):
 def competitor_league_list(request, competitor_id, template_name):
     leaguecompetitors = LeagueCompetitor.objects.filter(competitor__id=competitor_id).order_by('league__start_date')
     
-    return object_detail(request, Competitor.objects.all(), competitor_id, extra_context={'leaguecompetitors': leaguecompetitors}, template_name=template_name)
+    return DetailView.as_view(
+        queryset=Competitor.objects.all(),
+        template_name=template_name
+    )(
+        request,
+        pk=competitor_id,
+        extra_context={'leaguecompetitors': leaguecompetitors}
+    )
     
 @never_cache
 def competitors_vs(request, competitor1_id, competitor2_id, template_name):
     games = Game.objects.filter(Q(player1__id=competitor1_id, player2__id=competitor2_id)|Q(player1__id=competitor2_id, player2__id=competitor1_id), league__visible=True).order_by('-end_datetime')
     
-    return object_detail(request, Competitor.objects.all(), competitor1_id, extra_context={'opponent': get_object_or_404(Competitor, id=competitor2_id) ,'games': games}, template_name=template_name)
+    return DetailView.as_view(
+        queryset=Competitor.objects.all(),
+        template_name=template_name
+    )(
+        request,
+        pk=competitor1_id,
+        extra_context={
+            'opponent': get_object_or_404(Competitor, id=competitor2_id),
+            'games': games
+        }
+    )
 
 @never_cache
 def competitor_rivals(request, competitor_id, template_name):
-    league_id = get_current_league().id
-    
-    try:
-        lc = LeagueCompetitor.objects.get(league__id=league_id, competitor__id=competitor_id)
-    except:
-        lcc = LeagueCompetitor.objects.filter(competitor__id=competitor_id).order_by('-league__id')
-        if lcc.count() > 0:
-            lc = lcc[0]
-        else:
-            lc = get_object_or_404(LeagueCompetitor, league__id=league_id, competitor__id=competitor_id)
-
     games = Game.objects.filter(Q(player1__id=competitor_id)|Q(player2__id=competitor_id))
     games = games.filter(league__visible=True)
     rivals = {}
@@ -207,7 +252,15 @@ def competitor_rivals(request, competitor_id, template_name):
               
     rivals = sorted(map(lambda x: x[1], rivals.items()), key=lambda x: x['object'].lastName)
         
-    return object_detail(request, Competitor.objects.all(), competitor_id, extra_context={'rivals': rivals, 'lc': lc}, template_name=template_name)
+    return DetailView.as_view(
+        queryset=Competitor.objects.all(),
+        template_name=template_name
+    )(
+        request,
+        pk=competitor_id,
+        extra_context={'rivals': rivals}
+    )
+
 
 def get_possible_opponents(lc, dt=None):
     if dt is None:
@@ -220,14 +273,16 @@ def get_possible_opponents(lc, dt=None):
         d[x['object'].id] = x
     for x in o2:
         if not d.has_key(x['object'].id):
-            d[x['object'].id] = x 
-     
+            d[x['object'].id] = x
+
     return sorted(d.values(), key=lambda x: x['object'].lastName)
+
 
 def get_game_delta(settings, rating1, rating2, result1, result2, min_rival_count):
     n = league_get_N(settings, result1, result2)
     
     return league_get_DELTA(settings, rating1, rating2, n, min_rival_count)
+
 
 def get_element_rating(rcl, x):
     for r in rcl:
@@ -235,6 +290,7 @@ def get_element_rating(rcl, x):
             return r['rating']
 
     return None
+
 
 @never_cache
 def competitor_game_rivals(request, league_id, competitor_id, template_name):
@@ -260,30 +316,45 @@ def competitor_game_rivals(request, league_id, competitor_id, template_name):
         for res1 in reversed(range(3)):
             r['results'].append({'res1' : res1, 'res2' : 3, 'delta': get_game_delta(lc.league.settings, lc.rating(), r['live_rating'], res1, 3, min_rival_count)})
 
-    return object_detail(request, Competitor.objects.all(), competitor_id, extra_context={'rivals': rivals, 'lc': lc}, template_name=template_name)
+    return DetailView.as_view(
+        queryset=Competitor.objects.all(),
+        template_name=template_name
+    )(
+        request,
+        pk=competitor_id,
+        extra_context={'rivals': rivals, 'lc': lc}
+    )
 
-
-import json 
 
 @never_cache
 def competitor_opponents(request, league_id, competitor_id):
     lc = get_object_or_404(LeagueCompetitor, league__id=league_id, competitor__id=competitor_id)
     #lc = LeagueCompetitor.objects.get(league__id=league_id, competitor__id=competitor_id)
     #json_data = json.dumps(map(lambda x: x['object'].id, lc.get_possible_opponents()))
-    
+
     try:
-        if request.GET.has_key('date'): 
+        if request.GET.has_key('date'):
             date = datetime.strptime(request.GET['date'], '%d.%m.%Y')
-            
+
             dt = date.replace(hour=3, minute=0, second=0)
         else:
             dt = None
     except:
         dt = None
-    
+
     r = get_possible_opponents(lc, dt)
     ol = map(lambda x: {'id': x['object'].id, 'name': u'%s %s' % (x['object'].lastName, x['object'].firstName )}, r)
     
     json_data = json.dumps({'HTTPRESPONSE':1, 'data': ol}, ensure_ascii=False)
     
-    return HttpResponse(json_data, mimetype="application/json")
+    return HttpResponse(json_data, content_type="application/json")
+
+
+def add_game(request, league_id):
+    from admin import GameAdmin
+    from django.contrib import admin
+
+    league = League.objects.get(id=league_id)
+    if request.method == 'POST':
+        request.POST['league'] = league_id
+    return GameAdmin(Game, admin.site, league=league).add_view(request)

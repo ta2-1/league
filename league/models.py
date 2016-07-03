@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime, timedelta, time
+
+from django.core.cache import get_cache
 from django.db import models
 from django.db.models import Q, Count
+from django.utils.translation import ugettext_lazy as _
 
 from rating.models import Competitor, Location
 from rating.utils import get_place_from_rating_list, get_place
 from league.utils import league_get_N, league_get_DELTA, update_rating_after, get_place_interval
-        
-from datetime import datetime, timedelta, time
 from league.utils import get_league_rating_datetime, statslog, leaguecompetitor_getfromcache
-
-from django.utils.translation import ugettext_lazy as _
-
-from django.core.cache import get_cache
 
 
 RATING_CHANGE_TYPE = (
@@ -22,14 +20,10 @@ RATING_CHANGE_TYPE = (
 
 TOURNAMENT_CATEGORIES = [('A', _(u'Категория А')), ('B', _(u'Категория В')),] 
 
-def get_current_league():
-    #return None
-    now = datetime.now()
-    ll = League.objects.filter(start_date__lt=datetime.now()).order_by('-end_date')[:1]
-    if ll.count() == 1:
-        return ll[0]
-    else:
-        return u''
+
+def get_current_leagues():
+    return list(League.objects.filter(is_current=True))
+
 
 class League(models.Model):
     class Meta:
@@ -45,7 +39,7 @@ class League(models.Model):
     tournament_a_datetime = models.DateTimeField(verbose_name=u'Дата и время турнира (A)', blank=True, null=True)
     tournament_b_datetime = models.DateTimeField(verbose_name=u'Дата и время турнира (B)', blank=True, null=True)
     location = models.ForeignKey(Location, verbose_name=u'Место проведения турнира', blank=True, null=True) 
-    is_tournament_data_filled = models.BooleanField(verbose_name=u'Данные введены полностью')
+    is_tournament_data_filled = models.BooleanField(verbose_name=u'Данные введены полностью', default=False,)
     
     settings = models.ForeignKey('LeagueSettings', verbose_name=u'Настройки лиги',)
     visible = models.BooleanField(verbose_name=u'Отображать на сайте', default=True,)
@@ -77,7 +71,7 @@ class League(models.Model):
                     
     def get_total_rating_competitor_list(self):
         league_date = datetime.combine(self.end_date, time())
-        
+
         rivals_count = self.settings.final_rival_quantity
     
         rcl = filter(lambda x: x['rival_count'] >= rivals_count, self.get_rating_competitor_list(league_date + timedelta(days=3)))
@@ -93,14 +87,14 @@ class League(models.Model):
         
         rivals_count = self.settings.reliability_rival_quantity
 
-        # minus 2 days for getting current state if datetime is now...
         dt = get_league_rating_datetime(dt_param)
         dt_str = dt.strftime("%Y-%m-%d")
         cache_key= u'rating_competitor_list_for_%d_league_%s' % (self.id, dt_str)
         cache = get_cache('league')
         rcl = cache.get(cache_key)
         if rcl is None:           
-            lcc = LeagueCompetitor.objects.filter(league__id=self.id)
+            lcc = LeagueCompetitor.objects.filter(league__id=self.id) \
+                                          .select_related('league', 'competitor')
             
             rcl = map(lambda x: 
                     {
@@ -136,12 +130,14 @@ class League(models.Model):
     
         return dt >= league_date
 
+
 class LeagueTournament(League):
     class Meta:
         proxy = True
         verbose_name = u'Итоговый турнир Лиги'
         verbose_name_plural = u'Итоговые турниры Лиги'
  
+
 class LeagueAlterTournament(League):
     class Meta:
         proxy = True
@@ -159,7 +155,7 @@ class LeagueCompetitor(models.Model):
     paid = models.NullBooleanField(u'Оплатил')
     status = models.CharField(u'Статус', max_length=255, blank=True)
     tournament_place = models.CharField(u'Место', max_length=255, blank=True)
-    is_participant = models.BooleanField(u'Принимал участие в турнире', blank=True)
+    is_participant = models.BooleanField(u'Принимал участие в турнире', blank=True, default=False)
     tournament_category = models.CharField(u'Категория турнира', blank=True, null=True,
                                            choices=TOURNAMENT_CATEGORIES, max_length=4)
     
@@ -190,7 +186,7 @@ class LeagueCompetitor(models.Model):
             if x['object'].id == self.competitor.id:
                 return x['rating']
 
-        
+
         return None
  
     def place(self):
@@ -318,7 +314,7 @@ class LeagueCompetitor(models.Model):
         res = filter(lambda x: x['object'].id != self.competitor.id and contains(min_p, max_p, x, last_place, offset), rcl)
         
         return sorted(res, key=lambda x: x['object'].lastName)
-    
+
 class Game(models.Model):
     class Meta:
         verbose_name = u'Игра'
@@ -335,8 +331,8 @@ class Game(models.Model):
     result1 = models.SmallIntegerField(u'Счёт')
     result2 = models.SmallIntegerField(u' ')
     
-    league = models.ForeignKey(League, verbose_name=u'Лига', default=get_current_league)
-    no_record = models.BooleanField(verbose_name=u'Незачетная игра')
+    league = models.ForeignKey(League, verbose_name=u'Лига')
+    no_record = models.BooleanField(verbose_name=u'Незачетная игра', default=False)
 
     def __unicode__(self):
         return u"%s - %s (%d : %d) - %s" % (self.player1.lastName, self.player2.lastName, self.result1, self.result2, self.end_datetime)
@@ -375,14 +371,14 @@ class Game(models.Model):
                 
             rating1.save()
             rating2.save()
-            
+
             
     def get_player_result(self, player):
         if player == self.player1:
             return self.result1
         else:
             return self.result2
-         
+
     
     
 class Rating(models.Model):

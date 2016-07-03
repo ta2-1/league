@@ -42,7 +42,7 @@
 	<th>{% trans "Рейтинг" %}</th>
 	<th class="td_delta">+/-</th>
 	{% for rs in result_sets %}
-		<th class="td_date"><a href="{% url resultset rs.tournament.id category.id %}">{{ rs.tournament.start_date }}</a></th>
+		<th class="td_date"><a href="{% url "resultset" rs.tournament.id category.id %}">{{ rs.tournament.start_date }}</a></th>
 	{% endfor %}
 	</tr>
     <tbody>

@@ -5,6 +5,7 @@ from league.models import Game
 class GameAdminForm(forms.ModelForm):
     class Meta:
         model = Game
+        fields = '__all__'
         #widgets = {
         #    'player1': forms.Select
         #}

@@ -11,6 +11,7 @@
 {% endblock %}
 
 {% block content %}
+  {{ block.super }}
 <br/>
 <div>
   <p>
@@ -34,7 +35,7 @@
 		{% for rs in object.resultset_set.all|dictsort:"category.title" %}
 		<tr>
 			<td>{{forloop.counter}}</td>
-			<td><a href="{% url resultset rs.tournament.id rs.category.id %}">{{rs.category}}</a></a></td>
+			<td><a href="{% url "resultset" rs.tournament.id rs.category.id %}">{{rs.category}}</a></td>
 			<td>{% for loc in rs.locations__set.all%}{{loc}}{%if not forloop.last%}, {%endif%}{%endfor%}</td>
 			<td>{{rs.competitors_count}}</td>
 		</tr>

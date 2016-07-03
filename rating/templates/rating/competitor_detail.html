@@ -13,21 +13,17 @@
 <div class="tabs">
 	<ul>
 		<li class="selected">
-			<a href="{% url competitor object.id %}">{% trans "Турниры" %}</a>
+			<a href="{% url "competitor" object.id %}">{% trans "Турниры" %}</a>
 		</li>
 		{% if object.leaguecompetitor_set.count > 0 %}
         <li>
-            <a href="{% url competitor_leagues object.id %}">{% trans "Лига" %}</a>
+            <a href="{% url "competitor_leagues" object.id %}">{% trans "Лига" %}</a>
 		</li>
 		<li>
-			<a href="{% url competitor_rivals object.id %}">{% trans "Статистика матчей" %}</a>
+			<a href="{% url "competitor_rivals" object.id %}">{% trans "Статистика матчей" %}</a>
 		</li>
-        {% if league %}
-        <li>
-            <a href="{% url competitor_game_rivals object.id league.id %}">{% trans "Выбор соперника" %}</a>
-        </li>
-        {% endif %}
-        {% endif %}
+
+    {% endif %}
 	</ul>
 </div>
 
@@ -41,7 +37,7 @@
     <tbody>
       {% for cat, place, rating in object_categories %}
         <tr>
-          <td><a href="{% url category cat.id %}">{{ cat }}</a></td>
+          <td><a href="{% url "category" cat.id %}">{{ cat }}</a></td>
           <td><span>{{ rating }}</span></td>
           <td><span>{{ place }}</span></td>
         </tr>
@@ -66,7 +62,7 @@
 		{% for r in object.resultset_points|dictsortreversed:"0.resultset.tournament.start_date" %} 
 		<tr>
 			<td>{{forloop.counter}}</td>
-			<td><a href="{% url resultset r.0.resultset.tournament.id r.0.resultset.category.id %}">{{ r.0.resultset.tournament }}</a></td>
+			<td><a href="{% url "resultset" r.0.resultset.tournament.id r.0.resultset.category.id %}">{{ r.0.resultset.tournament }}</a></td>
 			<td><span>{{ r.0.resultset.tournament.get_date }}</span></td>
 			<td><span>{% for l in r.0.resultset.locations__set.all%}{{ l }}{%if not forloop.last%}, {%endif%}{%endfor%}</span></td>
 			<td><span>{{ r.0.resultset.category }}</span></td>

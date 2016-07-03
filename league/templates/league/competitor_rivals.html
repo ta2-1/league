@@ -9,25 +9,19 @@
 {% endblock %}
 
 
-{% block content_title %}
-<h1>{{object.firstName}} {{object.lastName}}</h1>
-{% endblock %}
-
 {% block content %}
-<div class="tabs">
+<h1>{{object.firstName}} {{object.lastName}}</h1>
+  <div class="tabs">
 	<ul>
 		<li>
-			<a href="{% url competitor object.id %}">{% trans "Турниры" %}</a>
+			<a href="{% url "competitor" object.id %}">{% trans "Турниры" %}</a>
 		</li>
 		<li>
-			<a href="{% url competitor_leagues object.id %}">{% trans "Лига" %}</a>
+			<a href="{% url "competitor_leagues" object.id %}">{% trans "Лига" %}</a>
 		</li>
 		<li class="selected">
-			<a href="{% url competitor_rivals object.id %}">{% trans "Статистика матчей" %}</a>
+			<a href="{% url "competitor_rivals" object.id %}">{% trans "Статистика матчей" %}</a>
 		</li>
-        <li>
-            <a href="{% url competitor_game_rivals object.id lc.league.id %}">{% trans "Выбор соперника" %}</a>
-        </li>
 	</ul>
 </div>
     
@@ -44,9 +38,9 @@
 			{% for r in rivals|dictsort:"object.lastName" %} 
 			<tr>
 				<td><strong>{{ forloop.counter }}</strong></td>
-				<td><a href="{% url competitor_leagues object.id %}">{{object.lastName}} {{object.firstName}}</a></td>
-				<td><a href="{% url competitors_vs object.id r.object.id %}">vs.</a></td>
-				<td><a href="{% url competitor_leagues r.object.id %}">{{r.object.lastName}} {{r.object.firstName}}</a></td>
+				<td><a href="{% url "competitor_leagues" object.id %}">{{object.lastName}} {{object.firstName}}</a></td>
+				<td><a href="{% url "competitors_vs" object.id r.object.id %}">vs.</a></td>
+				<td><a href="{% url "competitor_leagues" r.object.id %}">{{r.object.lastName}} {{r.object.firstName}}</a></td>
 				<td><strong>{{ r.games_count|score:r.wins }}</strong></td>
 			</tr>
 			{% endfor %}

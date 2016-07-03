@@ -160,7 +160,7 @@ class Category(models.Model):
     
     title = models.CharField(_(u'Название'), max_length=25)
     position = models.PositiveSmallIntegerField(_(u'Позиция'))
-    show_on_main = models.BooleanField(u'Показывать на главной')
+    show_on_main = models.BooleanField(u'Показывать на главной', default=False)
     settings = models.ForeignKey(CategorySettings)
 
     def __unicode__(self):
@@ -308,7 +308,7 @@ class Tournament(models.Model):
     end_date = models.DateField(_(u'Дата окончания'), blank=True, null=True)
     
     squashclub_url = models.CharField(_(u'Ссылка на турнир на squashclub.ru'), max_length=200, blank=True)
-    is_past = models.BooleanField(_(u'Турнир прошел (учитывать при подсчете рейтинга)')) 
+    is_past = models.BooleanField(_(u'Турнир прошел (учитывать при подсчете рейтинга)'), default=False)
     
     def __unicode__(self):
         return u"%s" % self.title
@@ -336,7 +336,10 @@ class Tournament(models.Model):
             c = Context({'date': self.start_date})
             return u"с %d по %d %s" % (self.start_date.day, self.end_date.day, t.render(c))
             
-        
+    def save(self, *args, **kwargs):
+        if self.end_date is None:
+            self.end_date = self.start_date
+        super(Tournament, self).save(*args, **kwargs)
                               
 class ResultSet(models.Model):
     tournament = models.ForeignKey('Tournament', verbose_name=u'Турнир')

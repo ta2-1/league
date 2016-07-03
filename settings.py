@@ -5,8 +5,8 @@ PROJECT_DIR = os.path.dirname(__file__)
 PROJECT_PATH = os.path.abspath(os.path.dirname(__file__))
 # Django settings for squash project.
 
-DEBUG = True 
-DEBUG_TOOLBAR_PATCH_SETTINGS = False 
+DEBUG = True
+DEBUG_TOOLBAR_PATCH_SETTINGS = False
 TEMPLATE_DEBUG = DEBUG
 #MAINTENANCE_MODE = True
 ADMINS = (
@@ -70,12 +70,15 @@ MEDIA_URL = '/media/'
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/home/media/media.lawrence.com/static/"
-STATIC_ROOT = os.path.join(PROJECT_PATH, "static")
+STATIC_ROOT = os.path.join(PROJECT_PATH, "assets")
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
-STATIC_URL = '/static/'
+STATIC_URL = '/assets/'
 
+
+ASSETS_DEBUG = True
+ASSETS_AUTO_BUILD = True
 # URL prefix for admin static files -- CSS, JavaScript and images.
 # Make sure to use a trailing slash.
 # Examples: "http://foo.com/static/admin/", "/static/admin/".
@@ -86,7 +89,7 @@ STATICFILES_DIRS = (
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    #STATIC_ROOT,
+    os.path.join(PROJECT_PATH, "static"),
     #os.path.join(PROJECT_PATH, "admin_tools"),
 )
 
@@ -108,6 +111,7 @@ TEMPLATE_LOADERS = (
 )
 
 MIDDLEWARE_CLASSES = (
+    #'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -118,7 +122,6 @@ MIDDLEWARE_CLASSES = (
     'middlewares.middleware.ForceDefaultLanguageMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     #'maintenancemode.middleware.MaintenanceModeMiddleware',
-    #'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
 DEBUG_TOOLBAR_PANELS = [
@@ -138,7 +141,7 @@ DEBUG_TOOLBAR_PANELS = [
 
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
-    "allauth.account.auth_backends.AuthenticationBackend",
+    #"allauth.account.auth_backends.AuthenticationBackend",
 )
 
 ROOT_URLCONF = 'urls'
@@ -147,7 +150,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    os.path.join(PROJECT_PATH, "templates")
+    os.path.join(PROJECT_PATH, "templates"),
 )
 
 MODELTRANSLATION_TRANSLATION_REGISTRY = 'translation'
@@ -163,22 +166,22 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+
     'django.contrib.flatpages',
-    
+
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
     'tinymce',
     'modeltranslation',
-    
+
     'rating',
     'league',
 
     'google_analytics',
     'rosetta',
-    'emailconfirmation',
+    #'emailconfirmation',
     #'uni_form',
 
     #'allauth',
@@ -187,12 +190,12 @@ INSTALLED_APPS = (
     #'allauth.twitter',
     #'allauth.openid',
     #'allauth.facebook',
-    
-    'south',
-    
+
+    #'south',
+
     'django_extensions',
     #'debug_toolbar',
-    
+
 )
 
 GOOGLE_ANALYTICS_MODEL = True
@@ -205,14 +208,14 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.media',
 
     # django 1.2 only
-    #'django.contrib.messages.context_processors.messages', 
+    #'django.contrib.messages.context_processors.messages',
 
     # required by django-admin-tools
     'django.core.context_processors.request',
-    
-    "allauth.context_processors.allauth",
-    "allauth.account.context_processors.account",
-    
+
+    #"allauth.context_processors.allauth",
+    #"allauth.account.context_processors.account",
+
     "rating.context_processors.site",
     "rating.context_processors.current_rating_datetime",
 )
@@ -298,3 +301,11 @@ ACCOUNT_EMAIL_VERIFICATION = True
 ACCOUNT_EMAIL_AUTHENTICATION = True
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
+
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'
+
+INTERNAL_IPS = ['127.0.0.1',]
+ALLOWED_HOSTS = ['127.0.0.1',]
+#SHOW_COLLAPSED = True
+#SHOW_TOOLBAR_CALLBACK = 'debug_toolbar.middleware.show_toolbar'
+#SHOW_TOOLBAR_CALLBACK = 'middlewares.middleware.show_toolbar'

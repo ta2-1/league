@@ -1,3 +1,6 @@
+from django.conf import settings
+
+
 class ForceDefaultLanguageMiddleware(object):
     """
     Ignore Accept-Language HTTP headers
@@ -11,3 +14,16 @@ class ForceDefaultLanguageMiddleware(object):
     def process_request(self, request):
         if request.META.has_key('HTTP_ACCEPT_LANGUAGE'):
             del request.META['HTTP_ACCEPT_LANGUAGE']
+
+
+def show_toolbar(request):
+    """
+    Default function to determine whether to show the toolbar on a given page.
+    """
+    if not request.user.is_superuser:
+        return False
+
+    if request.is_ajax():
+        return False
+
+    return bool(settings.DEBUG)

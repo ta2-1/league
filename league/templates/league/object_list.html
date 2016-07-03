@@ -20,7 +20,7 @@
 		{% for obj in object_list|dictsort:"start_date" %} 
 		<tr>
 			<td>{{forloop.counter}}</td>
-			<td><a href="{% url league_rating obj.id %}">{{obj.title}}</a></td>
+			<td><a href="{% url "league_rating" obj.id %}">{{obj.title}}</a></td>
 			<td>{{obj.start_date}}</td>
 			<td>{{obj.end_date}}</td>
 			<td>{{obj.leaguecompetitor_set.count}}</td>

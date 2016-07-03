@@ -123,8 +123,5 @@ def get_place_interval(place):
             return (-1, -1)
             
 
-def get_league_rating_datetime(datetime):
-    dt = datetime - timedelta(days=1)
-    dt = dt.replace(hour=0, minute=0, second=0)
-    
-    return dt
+def get_league_rating_datetime(dt):
+    return dt.replace(hour=0, minute=0, second=0) + timedelta(days=1)

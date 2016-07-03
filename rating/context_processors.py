@@ -8,4 +8,4 @@ def site(request):
 
 
 def current_rating_datetime(request):
-    return { 'current_rating_datetime': get_league_rating_datetime(datetime.now()) }
+    return { 'current_rating_datetime': datetime.now() }

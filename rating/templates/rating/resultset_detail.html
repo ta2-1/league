@@ -8,8 +8,8 @@
 
 {% block content %}
 <div>
-  <p><span>{% trans "Название турнира" %}: </span><a href="{% url tournament object.tournament.id %}"><strong>{{ object.tournament.title }}</strong></a></p>
-  <p><span>{% trans "Категория" %}: </span><a href="{% url category object.category.id %}">{{object.category.title}}</a></p>
+  <p><span>{% trans "Название турнира" %}: </span><a href="{% url "tournament" object.tournament.id %}"><strong>{{ object.tournament.title }}</strong></a></p>
+  <p><span>{% trans "Категория" %}: </span><a href="{% url "category" object.category.id %}">{{object.category.title}}</a></p>
   <p><span>{% trans "Дата" %}: </span><span><strong>{{object.tournament.get_date}}</span></strong></p>
   <p><span>{% trans "Место" %}: </span><span><strong>{{object.locations__set.0}}</span></strong></p>
 </div>

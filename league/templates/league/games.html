@@ -6,33 +6,31 @@
 {% trans "Игры" %} — {{league.title}} — {{site.name}}
 {% endblock %}
 
-{% block content_title %}
+{% block content %}
 <div style="float:left">
 <h1>{{league.title}}</h1>
 <p class="lm-date">{% trans "Даты проведения" %}: <span>{{league.start_date}}&nbsp;&dash;&nbsp;{{league.end_date}}</span></p>
 <div class="tabs">
 	<ul>
 		<li>
-			<a href="{% url league_rating league.id %}">{% trans "Лига" %}</a>
+			<a href="{% url "league_rating" league.id %}">{% trans "Лига" %}</a>
 		</li>
 		<li class="selected">
-			<a href="{% url league_games league.id %}">{% trans "Игры" %}</a>
+			<a href="{% url "league_games" league.id %}">{% trans "Игры" %}</a>
 		</li>
         <li>
-			<a href="{% url league_penalties league.id %}">{% trans "Штрафы" %}</a>
+			<a href="{% url "league_penalties" league.id %}">{% trans "Штрафы" %}</a>
 		</li>
 		{% if league.is_ended %}
 		<li>
-			<a href="{% url league_results league.id %}">{% trans "Результаты" %}</a>
-		</li>	
+			<a href="{% url "league_results" league.id %}">{% trans "Результаты" %}</a>
+		</li>
 		{% endif %}
     </ul>
 </div>
 </div>
-{% endblock %}
 
-{% block content %}
-{% block sponsors %}{{ block.super }}{% endblock %}
+  {% block sponsors %}{{ block.super }}{% endblock %}
 <div style="clear:both">
 <table>
 	<tr>
@@ -45,12 +43,12 @@
 	<th class="tournament-date">{% trans "Дата и время" %}</th>
 	</tr>
 	<tbody>
-		{% for obj in object_list|dictsortreversed:"end_datetime" %}
+		{% for obj in object_list %}
 		<tr>
 			<td><strong>{{ obj.number }}</strong></td>
-			<td class="td_name"><a href="{% url competitor_league obj.player1.id obj.league.id %}" class="{{obj.result1|win_or_lose:obj.result2}}">{{obj.player1.lastName}} {{obj.player1.firstName}}</a></td>
-			<td><a href="{% url competitors_vs obj.player1.id obj.player2.id %}">vs.</a></td>
-			<td class="td_name"><a href="{% url competitor_league obj.player2.id obj.league.id %}" class="{{obj.result2|win_or_lose:obj.result1}}">{{obj.player2.lastName}} {{obj.player2.firstName}}</a></td>
+			<td class="td_name"><a href="{% url "competitor_league" obj.player1.id obj.league.id %}" class="{{obj.result1|win_or_lose:obj.result2}}">{{obj.player1.lastName}} {{obj.player1.firstName}}</a></td>
+			<td><a href="{% url "competitors_vs" obj.player1.id obj.player2.id %}">vs.</a></td>
+			<td class="td_name"><a href="{% url "competitor_league" obj.player2.id obj.league.id %}" class="{{obj.result2|win_or_lose:obj.result1}}">{{obj.player2.lastName}} {{obj.player2.firstName}}</a></td>
 				
 			
 			<td><strong>{{obj.result1}}:{{obj.result2}}</strong></td>
