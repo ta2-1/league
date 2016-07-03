@@ -43,6 +43,7 @@ class League(models.Model):
     
     settings = models.ForeignKey('LeagueSettings', verbose_name=u'Настройки лиги',)
     visible = models.BooleanField(verbose_name=u'Отображать на сайте', default=True,)
+    is_current = models.BooleanField(verbose_name=u'Текущая', default=False,)
 
     def __unicode__(self):
         return self.title

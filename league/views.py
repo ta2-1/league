@@ -185,12 +185,19 @@ def competitor(request, league_id, competitor_id, template_name):
     #games = Game.objects.filter(Q(player1__id=competitor_id)|Q(player2__id=competitor_id), league__id=league_id).order_by('-end_datetime')
     #r_games = map(lambda x: {'game': x, 'delta': leaguecompetitor.get_delta_rating(x)}, games)
     extra_context={'rr': rr, 'leaguecompetitors': leaguecompetitors, 'leaguecompetitor': leaguecompetitor}
-    
-    return object_detail(request, Competitor.objects.all(), competitor_id, extra_context=extra_context, template_name=template_name)
+
+    return DetailView.as_view(
+        queryset=Competitor.objects.all(),
+        template_name=template_name
+    )(
+        request,
+        pk=competitor_id,
+        extra_context=extra_context
+    )
 
 @never_cache
 def competitor_leagues(request, competitor_id):
-    league_id = get_current_league().id
+    league_id = get_current_leagues()[0].id
     lc = None
     try:
         lc = LeagueCompetitor.objects.get(league__id=league_id, competitor__id=competitor_id)

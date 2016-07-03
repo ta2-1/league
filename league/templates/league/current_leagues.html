@@ -1,0 +1,115 @@
+{% extends "league/leagues.html" %}
+
+{% load i18n rating_tags %}
+
+{% block title %}
+{% trans "Текущие лиги" %} — {{block.super}}
+{% endblock %}
+
+
+{% block content %}
+{% for item in leagues %}
+  {% if not item.league.is_ended or not item.league.is_tournament_data_filled %}
+  {% with league=item.league rcl=item.rcl league_rating_datetime=item.league_rating_datetime %}
+  <div style="float: left; margin-right:20px">
+  <h1>{{league.title}}</h1>
+  <!--{% block sponsors %}{{ block.super }}{% endblock %}-->
+  </div>
+
+  <div style="clear:both">
+    <p><span>{% trans "Даты проведения:" %} </span><span><strong>{% trans "с"%} {{league.start_date}} {% trans "по" %} {{league.end_date}}</strong></span></p>
+	  <p><span>{% trans "Количество участников" %}: </span><span><strong>{{league.leaguecompetitor_set.count}}</strong></span></p>
+    <p><span>{% trans "Количество игр" %}: </span><span><strong>{{league.valid_games.count}}</strong></span></p>
+    <p><a href="{% url "league_rating" league.id %}">{% trans "Подробнее" %}</a></p>
+    <table>
+      <theader>
+      <th class="rating">{% trans "Место" %}</th>
+      <th>{% trans "Фамилия и Имя" %}</th>
+      <th class="rating">{% trans "Рейтинг" %}</th>
+      <th>{% trans "Количество игр" %}</th>
+      <th>{% trans "Количество соперников" %}</th>
+      <th class="tournament-date">{% trans "Дата последней игры" %}</th>
+      </theader>
+      <tbody>
+        {% for obj in rcl|slice:"10" %} <!-- |dictsortreversed:"rating" -->
+        <tr class="{% if forloop.last %}last{% endif%}{% if obj.lc.paid != None and obj.lc.paid == 0 %}not-paid{% endif %}">
+          <td class="rating"><strong>{{obj.place|stringformat:"s"}}</strong></td>
+          <td class="td_name"><a href="{% url "competitor_league" obj.lc.competitor.id obj.lc.league.id %}">{{obj.object.id|get_competitor_attr:"lastName"}} {{obj.object.id|get_competitor_attr:"firstName"}}</a></td>
+          <td class="rating"><strong>{{obj.rating|floatformat:2}}</strong></td>
+          <td><strong>{{obj.game_count}}</strong></td>
+          <td><strong>{{obj.rival_count}}</strong></td>
+          <td><strong>{{obj.last_game.end_datetime}}</strong></td>
+        </tr>
+        {% endfor %}
+
+      </tbody>
+    </table>
+    <a href="{% url 'league_rating' league.id %}"><strong>{% trans "Полная таблица лиги" %}</strong></a>
+  </div>
+  {% endwith %}
+  {% else %}
+    {% with league=item.league rcl_a=item.rcl_a rcl_b=item.rcl_b %}
+    <div style="float: left; margin-right:20px">
+    <h1>{{league.title}}</h1>
+    <p><span>{% trans "Даты проведения:" %} </span><span><strong>{% trans "с"%} {{league.start_date}} {% trans "по" %} {{league.end_date}}</strong></span></p>
+	  <p><span>{% trans "Количество участников" %}: </span><span><strong>{{league.leaguecompetitor_set.count}}</strong></span></p>
+    <p><span>{% trans "Количество игр" %}: </span><span><strong>{{league.valid_games.count}}</strong></span></p>
+    <p><a href="{% url "league_results" league.id %}">{% trans "Подробнее" %}</a></p>
+
+<h3 class="results-title">
+    {% trans "Призеры итогового турнира (Категория A)" %}
+</h3>
+<table>
+	<theader>
+  <th>{% trans "Место" %}</th>
+	<th>{% trans "Фамилия и Имя" %}</th>
+  <th>{% trans "+/-" %}</th>
+	<th class="rating">{% trans "Рейтинг" %}</th>
+	<th>{% trans "Количество игр" %}</th>
+	<th>{% trans "Количество соперников" %}</th>
+	</theader>
+	<tbody>
+    {% for obj in rcl_a|dictsort:"sort_tournament_place"|slice:"3" %}
+    <tr {% if forloop.last %}class="last"{% endif%}>
+        <td>{{obj.tournament_place}}</td>
+        <td class="td_name"><a href="{% url "competitor_league" obj.lc.competitor.id obj.lc.league.id %}">{{obj.lc.competitor.lastName}} {{obj.lc.competitor.firstName}}</a></td>
+        <td>{% autoescape off %}{{obj.place_delta|show_arrow}}{% endautoescape %}</td>
+        <td class="rating"><strong>{{obj.rating|floatformat:2}}</strong></td>
+        <td><strong>{{obj.game_count}}</strong></td>
+        <td><strong>{{obj.rival_count}}</strong></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h3 class="results-title">
+  {% trans "Призеры итогового турнира (Категория B)" %}
+</h3>
+<table>
+	<theader>
+    <th>{% trans "Место" %}</th>
+    <th>{% trans "Фамилия и Имя" %}</th>
+	  <th>{% trans "+/-" %}</th>
+    <th class="rating">{% trans "Рейтинг" %}</th>
+	  <th>{% trans "Количество игр" %}</th>
+	  <th>{% trans "Количество соперников" %}</th>
+	</theader>
+	<tbody>
+    {% for obj in rcl_b|dictsort:"sort_tournament_place"|slice:"3" %}
+    <tr {% if forloop.last %}class="last"{% endif%}>
+        <td>{{obj.tournament_place}}</td>
+        <td class="td_name"><a href="{% url "competitor_league" obj.lc.competitor.id obj.lc.league.id %}">{{obj.lc.competitor.lastName}} {{obj.lc.competitor.firstName}}</a></td>
+        <td>{% autoescape off %}{{obj.place_delta|show_arrow}}{% endautoescape %}</td>
+        <td class="rating"><strong>{{obj.rating|floatformat:2}}</strong></td>
+        <td><strong>{{obj.game_count}}</strong></td>
+        <td><strong>{{obj.rival_count}}</strong></td>
+    </tr>
+    {% endfor %}
+	</tbody>
+</table>
+</div>
+  {% endwith %}
+  {% endif %}
+
+{% endfor %}
+{% endblock %}

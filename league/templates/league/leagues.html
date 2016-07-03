@@ -6,13 +6,13 @@
     <div class="tabs menu">
     	<ul>
     		<li {% if request.path_info|resolved_url_name|is_in:"league_list" %}class="selected" {% endif %}>
-    			<a href="{% url league_list %}">{% trans 'Все лиги' %}</a>
+          <a href="{% url "league_list" %}">{% trans 'Все лиги' %}</a>
     		</li>
-    		<li {% if request.path_info|resolved_url_name = 'league_statement' %}class="selected" {% endif %}>
-    			<a href="{% url league_statement %}">{% trans 'Положение лиги' %}</a>
+        <li {% if request.path_info|resolved_url_name == 'league_statement' %}class="selected" {% endif %}>
+          <a href="{% url "league_statement" %}">{% trans 'Положение лиги' %}</a>
     		</li>
-    		<li {% if request.path_info|resolved_url_name = 'league_rules' %}class="selected" {% endif %}>
-    			<a href="{% url league_rules %}">{% trans 'Правила расчета рейтинга' %}</a>
+        <li {% if request.path_info|resolved_url_name == 'league_rules' %}class="selected" {% endif %}>
+          <a href="{% url "league_rules" %}">{% trans 'Правила расчета рейтинга' %}</a>
     		</li>
     	</ul> 
     </div>

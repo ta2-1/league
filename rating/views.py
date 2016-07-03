@@ -54,7 +54,7 @@ def rules(request, template_name=''):
     return HttpResponse(t.render(c))  
 
 
-@cache_page
+#@cache_page(60*60*24*7)
 def index(request, template_name=''):
     cc = []
     for c in Category.objects.filter(show_on_main=True).order_by('position'):

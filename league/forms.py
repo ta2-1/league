@@ -20,3 +20,5 @@ class GameAdminForm(forms.ModelForm):
         for fn in ('player1', 'player2'):
             w = self.fields[fn].widget     
             self.fields[fn].widget = w.widget
+        self.fields['league'].widget.widget.attrs['disabled'] = 'disabled'
+        self.fields['league'].widget.can_add_related = False

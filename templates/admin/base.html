@@ -12,10 +12,9 @@
 {% block extrahead %}{% endblock %}
 {% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE" />{% endblock %}
 {% google_analytics %}
-<link rel="shortcut icon" href="{% static "ball.png" %}"/>
+<link rel="shortcut icon" href="static/ball.png" />
 <meta name="verify-reformal" content="858adb9307fbb88703257585" />
 </head>
-
 {% load i18n %}
 
 <body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}">
@@ -26,40 +25,51 @@
     {% if not is_popup %}
     <!-- Header -->
     <div id="header">
-    	<div class="lang">
-       		{% for l in LANGUAGES %} 
-            {% if l.0 == LANGUAGE_CODE %}
-       				<strong>{{l.0|capfirst}}</strong>
-       			{% else %}
-       				<a href="/i18n/setlang?language={{l.0}}"{{l.0|capfirst}}>{{l.0|capfirst}}</a>
-       			{% endif %}
-       			{% if forloop.first %}/{% endif %}
-       		{% endfor %}
-       	</div>
         <div id="branding">
         {% block branding %}{% endblock %}
         </div>
+        {% if user.is_active and user.is_staff %}
+        <div id="user-tools">
+            {% block welcome-msg %}
+                {% trans 'Welcome,' %}
+                <strong>{% firstof user.get_short_name user.get_username %}</strong>.
+            {% endblock %}
+            {% block userlinks %}
+                {% url 'django-admindocs-docroot' as docsroot %}
+                {% if docsroot %}
+                    <a href="{{ docsroot }}">{% trans 'Documentation' %}</a> /
+                {% endif %}
+                {% if user.has_usable_password %}
+                <a href="{% url 'admin:password_change' %}">{% trans 'Change password' %}</a> /
+                {% endif %}
+                <a href="{% url 'admin:logout' %}">{% trans 'Log out' %}</a>
+            {% endblock %}
+        </div>
+        {% endif %}
         {% block nav-global %}{% endblock %}
-        {% block search %}
-<div class="ya-site-form ya-site-form_inited_no" onclick="return {'bg': '#417690', 'target': '_self', 'language': 'ru', 'suggest': true, 'tld': 'ru', 'site_suggest': true, 'action': 'http://kortov.net/search', 'webopt': false, 'fontsize': 12, 'arrow': true, 'fg': '#000000', 'searchid': '1930273', 'logo': 'rb', 'websearch': false, 'type': 3}"><form action="http://yandex.ru/sitesearch" method="get" target="_self"><input type="hidden" name="searchid" value="1930273" /><input type="hidden" name="l10n" value="ru" /><input type="hidden" name="reqenc" value="" /><input type="text" name="text" value="" /><input type="submit" value="Найти" /></form></div><style type="text/css">.ya-page_js_yes .ya-site-form_inited_no { display: none; }</style><script type="text/javascript">(function(w,d,c){var s=d.createElement('script'),h=d.getElementsByTagName('script')[0],e=d.documentElement;(' '+e.className+' ').indexOf(' ya-page_js_yes ')===-1&&(e.className+=' ya-page_js_yes');s.type='text/javascript';s.async=true;s.charset='utf-8';s.src=(d.location.protocol==='https:'?'https:':'http:')+'//site.yandex.net/v2.0/js/all.js';h.parentNode.insertBefore(s,h);(w[c]||(w[c]=[])).push(function(){Ya.Site.Form.init()})})(window,document,'yandex_site_callbacks');</script>
-        {% endblock %}
-        
     </div>
     <!-- END Header -->
-    {% block breadcrumbs %}{% endblock %}
+    {% block breadcrumbs %}
+    <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    {% if title %} &rsaquo; {{ title }}{% endif %}
+    </div>
+    {% endblock %}
     {% endif %}
 
+    {% block messages %}
         {% if messages %}
         <ul class="messagelist">{% for message in messages %}
-          <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-	{% endfor %}</ul>
+          <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message|capfirst }}</li>
+        {% endfor %}</ul>
         {% endif %}
+    {% endblock messages %}
 
-    <!-- Contenti15 -->
+    <!-- Content -->
     <div id="content" class="{% block coltype %}colM{% endblock %}">
         {% block pretitle %}{% endblock %}
-        {% block content %}
         {% block content_title %}{% if title %}<h1>{{ title }}</h1>{% endif %}{% endblock %}
+        {% block content %}
         {% block object-tools %}{% endblock %}
         {{ content }}
         {% endblock %}
@@ -71,6 +81,6 @@
     {% block footer %}<div id="footer"></div>{% endblock %}
 </div>
 <!-- END Container -->
-    {% block reformal %}{% endblock %}
+
 </body>
 </html>
