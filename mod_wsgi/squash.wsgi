@@ -25,6 +25,6 @@ sys.path.append('/home/taras/projects/kortov-net')
 # Now do DJANGO_SETTINGS_MODULE and create the WSGI app.
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 
-import django.core.handlers.wsgi
-application = django.core.handlers.wsgi.WSGIHandler()
+from django.core.wsgi import get_wsgi_application
+application = get_wsgi_application()
 
