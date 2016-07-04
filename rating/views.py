@@ -134,7 +134,7 @@ def resultset(request, tournament_id='', category_id=''):
 
 @cache_page(60*60*24*7)
 def competitors(request):
-    return ListView().as_view(queryset=Competitor.objects.all())(request)
+    return ListView.as_view(queryset=Competitor.objects.all())(request)
 
 
 @cache_page(60*60*24*7)

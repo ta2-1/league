@@ -1,6 +1,6 @@
 {% extends "rating/tournaments.html" %}
 
-{% load i18n rating_tags %}
+{% load i18n rating_tags admin_static %}
 
 {% block title %}
 {% trans "Рейтинг" %} ({% trans "категория" %} {{category.title}}) — {{block.super}}
@@ -22,8 +22,8 @@
 {% endblock %}
 {% block extrahead %}
     {{ block.super }}
-    <script type="text/javascript" src="/static/admin/js/jquery.min.js"></script>
-    <script type="text/javascript" src="/static/admin/js/jquery.init.js"></script>
+    <script type="text/javascript" src="{% static "admin/js/jquery.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "admin/js/jquery.init.js" %}"></script>
     <script type="text/javascript">
         $ = django.jQuery;
         $(document).ready(function(){
