@@ -44,6 +44,7 @@ class League(models.Model):
     settings = models.ForeignKey('LeagueSettings', verbose_name=u'Настройки лиги',)
     visible = models.BooleanField(verbose_name=u'Отображать на сайте', default=True,)
     is_current = models.BooleanField(verbose_name=u'Текущая', default=False,)
+    mark_unpaid_competitors = models.BooleanField(verbose_name=u'Отмечать неоплативших', default=False,)
 
     def __unicode__(self):
         return self.title
@@ -153,7 +154,7 @@ class LeagueCompetitor(models.Model):
         
     competitor = models.ForeignKey(Competitor, verbose_name=u'Участник')
     league = models.ForeignKey(League, verbose_name=u'Лига')
-    paid = models.NullBooleanField(u'Оплатил')
+    paid = models.BooleanField(u'Оплатил', default=False)
     status = models.CharField(u'Статус', max_length=255, blank=True)
     tournament_place = models.CharField(u'Место', max_length=255, blank=True)
     is_participant = models.BooleanField(u'Принимал участие в турнире', blank=True, default=False)
