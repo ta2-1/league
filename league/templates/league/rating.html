@@ -57,7 +57,7 @@
 	</theader>
 	<tbody>
 		{% for obj in rcl %} <!-- |dictsortreversed:"rating" --> 
-		<tr class="{% if forloop.last %}last{% endif%}{% if league.mark_unpaid_competitors and not obj.lc.paid %}not-paid{% endif %}">
+		<tr class="{% if forloop.last %}last{% endif%}{% if league.mark_unpaid_competitors and not obj.lc.paid %} not-paid{% endif %}">
 			<td class="rating"><strong>{{obj.place|stringformat:"s"}}</strong></td>
 			<td class="td_name"><a href="{% url "competitor_league" obj.lc.competitor.id obj.lc.league.id %}">{{obj.object.lastName}} {{obj.object.firstName}}</a></td>
 			<td class="rating"><strong>{{obj.rating|floatformat:2}}</strong></td>
