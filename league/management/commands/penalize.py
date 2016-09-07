@@ -5,9 +5,9 @@ from optparse import make_option
 from datetime import datetime, timedelta, time
 from dateutil.relativedelta import relativedelta
 
-from django.core.management.base import BaseCommand, NoArgsCommand
+from django.core.management.base import BaseCommand
 
-from league.models import get_current_league, League, LeagueCompetitor, Rating
+from league.models import League, LeagueCompetitor, Rating
 
 class Command(BaseCommand):
     help = "Penalize competitors who does not play much."
@@ -16,7 +16,7 @@ class Command(BaseCommand):
     )
 
     option_list = BaseCommand.option_list + shared_option_list
-    current_league_id = 1007
+    current_league_id = 1008
 
     def handle(self, *args, **options):
         l = League.objects.get(id=self.current_league_id)
