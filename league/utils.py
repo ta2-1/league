@@ -73,7 +73,8 @@ def league_get_DELTA(settings, r1, r2, N, min_rival_count=0):
         return TRUST_COEF*(N + (r2-r1)/(SOFTEN_COEF-TRUST_DELTA))
     
 def get_new_delta(settings, rating1, rating2):
-    if rating1.game.no_record:
+    game = rating1.game
+    if game.no_record:
         return 0
     else:
         result1 = rating1.game.get_player_result(rating1.player)
@@ -81,7 +82,7 @@ def get_new_delta(settings, rating1, rating2):
         lc1 = rating1.league.leaguecompetitor_set.get(competitor=rating1.player)
         lc2 = rating2.league.leaguecompetitor_set.get(competitor=rating2.player)
 
-        min_rival_count = min(lc1.rival_count(), lc2.rival_count())
+        min_rival_count = min(lc1.rival_count(game.start_datetime), lc2.rival_count(game.start_datetime))
         n = league_get_N(settings, result1, result2)
      
         return league_get_DELTA(settings, rating1.rating_before, rating2.rating_before, n, min_rival_count)
