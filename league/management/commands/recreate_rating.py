@@ -22,7 +22,7 @@ class Command(NoArgsCommand):
     option_list = NoArgsCommand.option_list + shared_option_list
 
     def handle_noargs(self, **options):
-        league_id = 1007
+        league_id = 1008
         first_penalty_month = 3
         is_finished = options.get('is_finished', False)
         league = League.objects.get(id=league_id)

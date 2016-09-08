@@ -358,7 +358,7 @@ class Game(models.Model):
                 cache.delete('%s:%s:%s' % (lc2.id, 'game_count', date))
 
 
-                min_rival_count = min(lc1.rival_count(), lc2.rival_count())
+                min_rival_count = min(lc1.rival_count(self.start_datetime), lc2.rival_count(self.start_datetime))
                 n = league_get_N(self.league.settings, self.result1, self.result2)
                 delta = league_get_DELTA(self.league.settings, r1, r2, n, min_rival_count)
                
