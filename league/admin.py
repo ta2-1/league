@@ -96,9 +96,10 @@ class LeagueTournamentCompetitorsInline(admin.TabularInline):
         qs = super(LeagueTournamentCompetitorsInline, self).queryset(request)
         
         if hasattr(self, 'league') and self.league:
+            rival_count = self.league.settings.final_rival_quantity
             rcl = self.league.get_rating_competitor_list(datetime.combine(self.league.end_date, time())+timedelta(days=2))
-            qs = qs.filter(competitor__id__in=map(lambda x: x['object'].id, filter(lambda x: x['rival_count']>=10, rcl)))
-        
+            qs = qs.filter(competitor__id__in=map(lambda x: x['object'].id, filter(lambda x: x['rival_count']>=rival_count, rcl)))
+
         return qs
     
     def get_formset(self, request, obj=None, **kwargs):
@@ -113,8 +114,9 @@ class LeagueTournamentACompetitorsInline(LeagueTournamentCompetitorsInline):
     def get_queryset(self, request):
         qs = super(LeagueTournamentCompetitorsInline, self).queryset(request)
         if hasattr(self, 'league') and self.league:
+            rival_count = self.league.settings.final_rival_quantity
             rcl = self.league.get_rating_competitor_list(datetime.combine(self.league.end_date, time())+timedelta(days=2))
-            qs = qs.filter(competitor__id__in=map(lambda x: x['object'].id, filter(lambda x: x['rival_count']>=10, rcl)[:16]))
+            qs = qs.filter(competitor__id__in=map(lambda x: x['object'].id, filter(lambda x: x['rival_count']>=rival_count, rcl)[:16]))
         return qs
 
 
@@ -124,8 +126,9 @@ class LeagueTournamentBCompetitorsInline(LeagueTournamentCompetitorsInline):
     def get_queryset(self, request):
         qs = super(LeagueTournamentBCompetitorsInline, self).queryset(request)
         if hasattr(self, 'league') and self.league:
+            rival_count = self.league.settings.final_rival_quantity
             rcl = self.league.get_rating_competitor_list(datetime.combine(self.league.end_date, time())+timedelta(days=2))
-            qs = qs.filter(competitor__id__in=map(lambda x: x['object'].id, filter(lambda x: x['rival_count']>=10, rcl)[16:]))
+            qs = qs.filter(competitor__id__in=map(lambda x: x['object'].id, filter(lambda x: x['rival_count']>=rival_count, rcl)[16:]))
         return qs
 
 
