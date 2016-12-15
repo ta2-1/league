@@ -1,14 +1,13 @@
-# Django settings for ak project.
 import os
-#import sys
+
 PROJECT_DIR = os.path.dirname(__file__)
 PROJECT_PATH = os.path.abspath(os.path.dirname(__file__))
-# Django settings for squash project.
 
+# Django settings for squash project.
 DEBUG = True
 DEBUG_TOOLBAR_PATCH_SETTINGS = False
 TEMPLATE_DEBUG = DEBUG
-#MAINTENANCE_MODE = True
+
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
 )
@@ -121,7 +120,6 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
     'middlewares.middleware.ForceDefaultLanguageMiddleware',
     'django.middleware.locale.LocaleMiddleware',
-    #'maintenancemode.middleware.MaintenanceModeMiddleware',
 )
 
 DEBUG_TOOLBAR_PANELS = [
@@ -191,8 +189,6 @@ INSTALLED_APPS = (
     #'allauth.openid',
     #'allauth.facebook',
 
-    #'south',
-
     'django_extensions',
     #'debug_toolbar',
 
@@ -217,9 +213,6 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.i18n',
     'django.core.context_processors.media',
 
-    # django 1.2 only
-    #'django.contrib.messages.context_processors.messages',
-
     # required by django-admin-tools
     'django.core.context_processors.request',
 
@@ -229,6 +222,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "rating.context_processors.site",
     "rating.context_processors.current_rating_datetime",
 )
+
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
 # the site admins on every HTTP 500 error.
