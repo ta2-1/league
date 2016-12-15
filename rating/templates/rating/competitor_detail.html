@@ -6,10 +6,8 @@
 {{object.firstName }} {{object.lastName }} — {% trans "Турниры" %} — {{block.super}}
 {% endblock %}
 
-{% block content_title %}
-<h1>{{object.firstName}} {{object.lastName}}</h1>
-{% endblock %}
 {% block content %}
+  <h1>{{object.firstName}} {{object.lastName}}</h1>
 <div class="tabs">
 	<ul>
 		<li class="selected">
