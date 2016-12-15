@@ -1,11 +1,11 @@
 import json
 
 from django.shortcuts import redirect, get_object_or_404
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, HttpResponseBadRequest
 from django.template import loader, RequestContext
 from django.conf import settings
 
-from rating.models import Competitor
+from rating.models import Competitor, Location
 from rating.genericviews import DetailedWithExtraContext as DetailView, ListViewWithExtraContext as ListView
 
 from league.models import get_current_leagues, Game, League, LeagueCompetitor, Rating
@@ -18,6 +18,103 @@ from datetime import datetime, timedelta, time
 
 #from django.views.decorators.cache import cache_control
 from django.views.decorators.cache import never_cache
+
+from rest_framework import serializers, viewsets, generics, permissions, renderers, response
+from rest_framework.decorators import detail_route
+
+
+
+# Serializers define the API representation.
+class UserSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        #model = User
+        fields = ('url', 'id', 'username', 'name', 'phone', 'email',
+                  'balance', 'booked', 'multiplier', 'price_level',
+                  'default_price_level')
+
+    @property
+    def data(self):
+        if hasattr(self, '_data'):
+            del self._data
+        return super(UserSerializer, self).data
+
+
+class LeagueSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = League
+        fields = ('id', 'title', 'start_date', 'end_date')
+
+
+class LeagueCompetitorSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Competitor
+        fields = ('id', 'first_name', 'last_name')
+
+
+class LeagueViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = League.objects.all()
+    serializer_class = LeagueSerializer
+
+    def get_queryset(self):
+        queryset = League.objects.filter(id__in=map(lambda x: x.id, get_current_leagues()))
+
+        return queryset
+
+    @detail_route()
+    def players(self, request, *args, **kwargs):
+        league = self.get_object()
+        competitors = Competitor.objects.filter(leaguecompetitor__league=league)
+
+        return response.Response(LeagueCompetitorSerializer(competitors, many=True).data)
+
+
+class LocationSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Location
+        fields = ('id', 'title')
+
+
+class LocationViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Location.objects.all()
+    serializer_class = LocationSerializer
+
+
+class GameSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Game
+        fields = ('id', 'player1', 'player2', 'result1', 'result2', 'played_at', 'rating_delta', 'location')
+
+    player1 = serializers.PrimaryKeyRelatedField(read_only=True)
+    player2 = serializers.PrimaryKeyRelatedField(read_only=True)
+    location= serializers.PrimaryKeyRelatedField(read_only=True)
+
+
+class GameViewSet(viewsets.mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    queryset = Game.objects.all()
+    serializer_class = GameSerializer
+
+class CreateGameSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Game
+        fields = ('id', 'player1', 'player2', 'result1', 'result2', 'end_datetime', 'rating_delta', 'location', 'league')
+
+    player1 = serializers.PrimaryKeyRelatedField(queryset=Competitor.objects.all())
+    player2 = serializers.PrimaryKeyRelatedField(queryset=Competitor.objects.all())
+    location = serializers.PrimaryKeyRelatedField(queryset=Location.objects.all())
+    league = serializers.PrimaryKeyRelatedField(queryset=League.objects.all())
+
+
+class CreateGameViewSet(viewsets.mixins.CreateModelMixin, viewsets.GenericViewSet):
+    queryset = Game.objects.all()
+    serializer_class = CreateGameSerializer
+
+    def create(self, request, *args, **kwargs):
+        try:
+            return super(CreateGameViewSet, self).create(request, *args, **kwargs)
+        except:
+            return HttpResponseBadRequest()
+
 
 @never_cache
 def flatpage(request, template_name='league/flatpage.html'):

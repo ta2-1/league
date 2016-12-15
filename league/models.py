@@ -381,8 +381,11 @@ class Game(models.Model):
         else:
             return self.result2
 
-    
-    
+    @property
+    def rating_delta(self):
+        return Rating.objects.get(player=self.player1, game=self).delta
+
+
 class Rating(models.Model):
     class Meta:
         verbose_name = u'Изменение рейтинга'

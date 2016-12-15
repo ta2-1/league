@@ -173,6 +173,7 @@ INSTALLED_APPS = (
     # 'django.contrib.admindocs',
     'tinymce',
     'modeltranslation',
+    'rest_framework',
 
     'rating',
     'league',

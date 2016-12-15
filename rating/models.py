@@ -15,10 +15,11 @@ class Rule(models.Model):
     
     def __unicode__(self):
         return u"%s" % self.text 
-    
+
+
 class Competitor(models.Model):
     firstName = models.CharField(_(u'Имя'), max_length=250)
-    lastName  = models.CharField(_(u'Фамилия'), max_length=250)
+    lastName = models.CharField(_(u'Фамилия'), max_length=250)
     
     birthDate = models.DateField(_(u'Дата рождения'), blank=True, null=True)
     
@@ -26,7 +27,19 @@ class Competitor(models.Model):
     
     def __unicode__(self):
         return u"%s %s" % (self.lastName, self.firstName)
-    
+
+    @property
+    def full_name(self):
+        return u" ".join([self.firstName, self.lastName])
+
+    @property
+    def first_name(self):
+        return self.firstName
+
+    @property
+    def last_name(self):
+        return self.lastName
+
     class Meta:
         verbose_name = _(u'Участник')
         verbose_name_plural = _(u'Участники')

@@ -1,13 +1,22 @@
-import os
 from django.conf import settings
 from django.conf.urls import patterns, include, url
 
 import lang_view
 
-# Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 
+from rest_framework import routers
+
+from league.views import GameViewSet, CreateGameViewSet, LeagueViewSet, LocationViewSet
+
 admin.autodiscover()
+
+# Routers provide an easy way of automatically determining the URL conf.
+router = routers.DefaultRouter()
+router.register(r'leagues', LeagueViewSet)
+router.register(r'locations', LocationViewSet)
+router.register(r'games', GameViewSet)
+router.register(r'games', CreateGameViewSet)
 
 urlpatterns = patterns('',
     # Examples:
@@ -67,6 +76,9 @@ urlpatterns = patterns('',
 
     url(r'^rosetta/', include('rosetta.urls')),
     #url(r'^admin_tools/', include('admin_tools.urls')),
+
+    url(r'^api/v0/', include(router.urls)),
+    url(r'^api/', include('rest_framework.urls', namespace='rest_framework')),
 )
 
 if settings.DEBUG:
