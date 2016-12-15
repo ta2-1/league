@@ -20,7 +20,7 @@
     <p><span>{% trans "Даты проведения:" %} </span><span><strong>{% trans "с"%} {{league.start_date}} {% trans "по" %} {{league.end_date}}</strong></span></p>
 	  <p><span>{% trans "Количество участников" %}: </span><span><strong>{{league.leaguecompetitor_set.count}}</strong></span></p>
     <p><span>{% trans "Количество игр" %}: </span><span><strong>{{league.valid_games.count}}</strong></span></p>
-    <p><a href="{% url "league_rating" league.id %}">{% trans "Подробнее" %}</a></p>
+    <p>
     <table>
       <theader>
       <th class="rating">{% trans "Место" %}</th>
@@ -44,7 +44,9 @@
 
       </tbody>
     </table>
-    <a href="{% url 'league_rating' league.id %}"><strong>{% trans "Полная таблица лиги" %}</strong></a>
+    </p>
+    <p><a href="{% url 'league_rating' league.id %}"><strong>{% trans "Полная таблица лиги" %}</strong></a></p>
+    <br/>
   </div>
   {% endwith %}
   {% else %}
