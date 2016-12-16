@@ -142,6 +142,8 @@ def leagues(request, template_name):
     ctx = {'leagues': []}
 
     for l in ll:
+        if not l.visible:
+            continue
         if not l.is_ended() or not l.is_tournament_data_filled:
             ctx['leagues'].append(get_league_rating_context(l, dt))
         else:

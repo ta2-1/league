@@ -74,9 +74,10 @@ def index(request, template_name=''):
     try:
         ll = get_current_leagues()
         for l in ll:
-            item = {'league': l}
-            item['top'] = l.get_rating_competitor_list()[:16]
-            current_leagues.append(item)
+            if l.visible:
+                item = {'league': l}
+                item['top'] = l.get_rating_competitor_list()[:16]
+                current_leagues.append(item)
     except:
         pass
 
