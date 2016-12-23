@@ -7,7 +7,7 @@ from django.contrib import admin
 
 from rest_framework import routers
 
-from league.views import GameViewSet, CreateGameViewSet, LeagueViewSet, LocationViewSet
+from league.views import GameViewSet, LeagueViewSet, LocationViewSet
 
 admin.autodiscover()
 
@@ -16,7 +16,6 @@ router = routers.DefaultRouter()
 router.register(r'leagues', LeagueViewSet)
 router.register(r'locations', LocationViewSet)
 router.register(r'games', GameViewSet)
-router.register(r'games', CreateGameViewSet)
 
 urlpatterns = patterns('',
     # Examples:

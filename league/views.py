@@ -83,35 +83,22 @@ class LocationViewSet(viewsets.ReadOnlyModelViewSet):
 class GameSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Game
-        fields = ('id', 'player1', 'player2', 'result1', 'result2', 'end_datetime', 'rating_delta', 'location')
-
-    player1 = serializers.PrimaryKeyRelatedField(read_only=True)
-    player2 = serializers.PrimaryKeyRelatedField(read_only=True)
-    location= serializers.PrimaryKeyRelatedField(read_only=True)
-
-
-class GameViewSet(viewsets.mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-    queryset = Game.objects.all()
-    serializer_class = GameSerializer
-
-class CreateGameSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = Game
         fields = ('id', 'player1', 'player2', 'result1', 'result2', 'end_datetime', 'rating_delta', 'location', 'league')
 
     player1 = serializers.PrimaryKeyRelatedField(queryset=Competitor.objects.all())
     player2 = serializers.PrimaryKeyRelatedField(queryset=Competitor.objects.all())
     location = serializers.PrimaryKeyRelatedField(queryset=Location.objects.all())
     league = serializers.PrimaryKeyRelatedField(queryset=League.objects.all())
+    end_datetime = serializers.DateTimeField(default_timezone=timezone.get_default_timezone())
 
 
-class CreateGameViewSet(viewsets.mixins.CreateModelMixin, viewsets.GenericViewSet):
+class GameViewSet(viewsets.mixins.RetrieveModelMixin, viewsets.mixins.CreateModelMixin, viewsets.GenericViewSet):
     queryset = Game.objects.all()
-    serializer_class = CreateGameSerializer
+    serializer_class = GameSerializer
 
     def create(self, request, *args, **kwargs):
         try:
-            return super(CreateGameViewSet, self).create(request, *args, **kwargs)
+            return super(GameViewSet, self).create(request, *args, **kwargs)
         except:
             return HttpResponseBadRequest()
 
