@@ -93,7 +93,7 @@ class LeagueTournamentCompetitorsInline(admin.TabularInline):
         )
   
     def get_queryset(self, request):
-        qs = super(LeagueTournamentCompetitorsInline, self).queryset(request)
+        qs = super(LeagueTournamentCompetitorsInline, self).get_queryset(request)
         
         if hasattr(self, 'league') and self.league:
             rival_count = self.league.settings.final_rival_quantity
@@ -112,7 +112,7 @@ class LeagueTournamentACompetitorsInline(LeagueTournamentCompetitorsInline):
     model = LeagueCompetitor
 
     def get_queryset(self, request):
-        qs = super(LeagueTournamentCompetitorsInline, self).queryset(request)
+        qs = super(LeagueTournamentCompetitorsInline, self).get_queryset(request)
         if hasattr(self, 'league') and self.league:
             rival_count = self.league.settings.final_rival_quantity
             rcl = self.league.get_rating_competitor_list(datetime.combine(self.league.end_date, time())+timedelta(days=2))
@@ -124,7 +124,7 @@ class LeagueTournamentBCompetitorsInline(LeagueTournamentCompetitorsInline):
     model = LeagueCompetitor
 
     def get_queryset(self, request):
-        qs = super(LeagueTournamentBCompetitorsInline, self).queryset(request)
+        qs = super(LeagueTournamentBCompetitorsInline, self).get_queryset(request)
         if hasattr(self, 'league') and self.league:
             rival_count = self.league.settings.final_rival_quantity
             rcl = self.league.get_rating_competitor_list(datetime.combine(self.league.end_date, time())+timedelta(days=2))
