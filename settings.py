@@ -6,7 +6,6 @@ PROJECT_PATH = os.path.abspath(os.path.dirname(__file__))
 # Django settings for squash project.
 DEBUG = True
 DEBUG_TOOLBAR_PATCH_SETTINGS = False
-TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -17,6 +16,7 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql', 	# Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+        #'ENGINE': 'django.db.backends.sqlite3', 	# Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
         'NAME': 'squash',                      	# Or path to database file if using sqlite3.
         'USER': 'squash',                      	# Not used with sqlite3.
         'PASSWORD': 'squash014454',                  	# Not used with sqlite3.
@@ -33,6 +33,7 @@ DATABASES = {
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
 TIME_ZONE = 'Europe/Moscow'
+USE_TZ = True
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -102,12 +103,30 @@ STATICFILES_FINDERS = (
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'v2_tnrvcw669t&y22q6uo_ka_p1s(ekw-d!6!h+ujd%!zr5xc*'
 
-# List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-    'django.template.loaders.eggs.Loader',
-)
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(PROJECT_PATH, "templates"),],
+        'OPTIONS': {
+            'context_processors': [
+                'django.contrib.auth.context_processors.auth',
+                'django.template.context_processors.request',
+                'django.template.context_processors.debug',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.media',
+                'django.template.context_processors.static',
+                'django.contrib.messages.context_processors.messages',
+
+                "rating.context_processors.site",
+                "rating.context_processors.current_rating_datetime",
+            ],
+            'loaders': [
+                'django.template.loaders.filesystem.Loader',
+                'django.template.loaders.app_directories.Loader',
+            ],
+        },
+    },
+]
 
 MIDDLEWARE_CLASSES = (
     #'debug_toolbar.middleware.DebugToolbarMiddleware',
@@ -120,9 +139,10 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
     'middlewares.middleware.ForceDefaultLanguageMiddleware',
     'django.middleware.locale.LocaleMiddleware',
+
 )
 
-DEBUG_TOOLBAR_PANELS = [
+DEBUG_TOOLBAR_PANELS_1 = [
     'debug_toolbar.panels.versions.VersionsPanel',
     'debug_toolbar.panels.timer.TimerPanel',
     'debug_toolbar.panels.settings.SettingsPanel',
@@ -143,13 +163,6 @@ AUTHENTICATION_BACKENDS = (
 )
 
 ROOT_URLCONF = 'urls'
-
-TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-    os.path.join(PROJECT_PATH, "templates"),
-)
 
 MODELTRANSLATION_TRANSLATION_REGISTRY = 'translation'
 
@@ -175,11 +188,11 @@ INSTALLED_APPS = (
     'modeltranslation',
     'rest_framework',
 
+    'analytics',
     'rating',
     'league',
 
-    'google_analytics',
-    'rosetta',
+    #'rosetta',
     #'emailconfirmation',
     #'uni_form',
 
@@ -190,79 +203,34 @@ INSTALLED_APPS = (
     #'allauth.openid',
     #'allauth.facebook',
 
-    'django_extensions',
+    #'django_extensions',
     #'debug_toolbar',
 
-    'raven.contrib.django.raven_compat',
+    #'raven.contrib.django.raven_compat',
 )
 
-import raven
-
-RAVEN_CONFIG = {
-    'dsn': 'https://64e514cfdf9e459aa8fec450c3da8baf:598a1680a50047f2a6b7ebdce8d22916@sentry.io/122359',
+# import raven
+# RAVEN_CONFIG_1 = {
+#    'dsn': 'https://64e514cfdf9e459aa8fec450c3da8baf:598a1680a50047f2a6b7ebdce8d22916@sentry.io/122359',
     # If you are using git, you can also automatically configure the
     # release based on the git info.
-    'release': raven.fetch_git_sha(os.path.dirname(os.pardir)),
+#    'release': raven.fetch_git_sha(os.path.dirname(os.pardir)),
+#}
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    )
 }
 
 GOOGLE_ANALYTICS_MODEL = True
-TEMPLATE_CONTEXT_PROCESSORS = (
-    # default template context processors
-    'django.contrib.auth.context_processors.auth',
-    #'django.core.context_processors.auth',
-    'django.core.context_processors.debug',
-    'django.core.context_processors.i18n',
-    'django.core.context_processors.media',
-
-    # required by django-admin-tools
-    'django.core.context_processors.request',
-
-    #"allauth.context_processors.allauth",
-    #"allauth.account.context_processors.account",
-
-    "rating.context_processors.site",
-    "rating.context_processors.current_rating_datetime",
-)
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
 # the site admins on every HTTP 500 error.
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'league': {
-            'format' : "[%(asctime)s]\t%(message)s",
-            'datefmt' : "%d/%b/%Y %H:%M:%S"
-        },
-    },
-    'handlers': {
-        'all': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(PROJECT_PATH, "log/all.log"),
-            'level': 'DEBUG',
-            'formatter': 'league',
-        },
-        'league': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(PROJECT_PATH, "log/league.log"),
-            'formatter': 'league',
-        }
-    },
-    'loggers': {
-        'league': {
-            'handlers': ['league'],
-            'level': 'INFO',
-        },
-        #'': {
-        #    'handlers': ['all'],
-        #    'level': 'DEBUG',
-        #}
-    }
-}
-
 RATING_MAX_COMPETITORS_COUNT = 32
 RATING_LAST_TOURNAMENTS_COUNT = 8
 RATING_RESULT_TOURNAMENTS_COUNT = 4
