@@ -1,5 +1,7 @@
 import json
 
+from datetime import datetime, timedelta
+
 from django.shortcuts import redirect, get_object_or_404
 from django.http import HttpResponse, Http404, HttpResponseBadRequest
 from django.template import loader, RequestContext
@@ -13,10 +15,7 @@ from django.db.models import Q
 from league.utils import league_get_N, league_get_DELTA, get_league_rating_datetime
 
 from django.contrib.flatpages.models import FlatPage
-
-from datetime import datetime, timedelta, time
-
-#from django.views.decorators.cache import cache_control
+from django.utils import timezone
 from django.views.decorators.cache import never_cache
 
 from rest_framework import serializers, viewsets, generics, permissions, renderers, response
@@ -119,25 +118,23 @@ def flatpage(request, template_name='league/flatpage.html'):
     return HttpResponse(t.render(c))
 
 
-@never_cache
-def leagues(request, template_name):
-    ll = get_current_leagues()
-    if not leagues:
-        return redirect(getattr(settings, 'FORCE_SCRIPT_NAME', ''))
+class LeaguesView(TemplateView):
+    template_name = 'league/current_leagues.html'
 
-    dt = datetime.now().replace(hour=0, minute=0, second=0)
-    ctx = {'leagues': []}
+    def get_context_data(self, **kwargs):
+        ll = get_current_leagues()
+        dt = timezone.now().replace(hour=0, minute=0, second=0)
+        ctx = {'leagues': []}
 
-    for l in ll:
-        if not l.visible:
-            continue
-        if not l.is_ended() or not l.is_tournament_data_filled:
-            ctx['leagues'].append(get_league_rating_context(l, dt))
-        else:
-            ctx['leagues'].append(get_league_result_context(l))
+        for l in ll:
+            if not l.visible:
+                continue
+            if not l.is_ended() or not l.is_tournament_data_filled:
+                ctx['leagues'].append(get_league_rating_context(l, dt))
+            else:
+                ctx['leagues'].append(get_league_result_context(l))
 
-    t = loader.get_template(template_name)
-    return HttpResponse(t.render(RequestContext(request, ctx)))
+        return ctx
 
 
 @never_cache
@@ -174,23 +171,24 @@ def get_league_result_context(league):
     }
 
 
-@never_cache
-def league_rating(request, league_id, template_name):
-    try:
-        if request.GET.has_key('date'):
-            date = datetime.strptime(request.GET['date'], '%d.%m.%Y')
+class LeagueRatingView(DetailView):
+    template_name = 'league/rating.html'
+    model = League
+    pk_url_kwarg = 'league_id'
 
-            dt = date.replace(hour=0, minute=0, second=0)
-        else:
-            dt = datetime.now()
-    except:
-        dt = datetime.now()
+    def get_context_data(self, **kwargs):
+        try:
+            if self.request.GET.has_key('date'):
+                date = datetime.strptime(self.request.GET['date'], '%d.%m.%Y')
 
-    league = League.objects.get(id=league_id)
-    ctx = get_league_rating_context(league, dt)
-    t = loader.get_template(template_name)
+                dt = date.replace(hour=0, minute=0, second=0)
+                # TODO timezone makeaware
+            else:
+                dt = timezone.now()
+        except:
+            dt = timezone.now()
 
-    return HttpResponse(t.render(RequestContext(request, ctx)))
+        return get_league_rating_context(self.get_object(), dt)
 
 
 @never_cache
@@ -357,7 +355,7 @@ def competitor_rivals(request, competitor_id, template_name):
 
 def get_possible_opponents(lc, dt=None):
     if dt is None:
-        dt = get_league_rating_datetime(datetime.now())
+        dt = get_league_rating_datetime(timezone.now())
     o1 = lc.get_possible_opponents(dt)
     o2 = lc.get_possible_opponents(dt - timedelta(days=1))
 
@@ -390,8 +388,8 @@ def competitor_game_rivals(request, league_id, competitor_id, template_name):
     lc = get_object_or_404(LeagueCompetitor, league__id=league_id, competitor__id=competitor_id)
     rival_count = lc.rival_count()
     # get live rating for actual deltas
-    live_rcl = lc.league.get_rating_competitor_list(datetime.now()+timedelta(days=2))    
-    dt = datetime.now().replace(hour=3, minute=0, second=0)
+    live_rcl = lc.league.get_rating_competitor_list(timezone.now()+timedelta(days=2))
+    dt = timezone.now().replace(hour=0, minute=0, second=0)
     rcl = lc.league.get_rating_competitor_list(dt)
     rivals = get_possible_opponents(lc, dt)
 

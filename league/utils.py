@@ -5,6 +5,7 @@ import re
 
 from django.core.cache import caches
 from django.db.models import Q
+from django.utils import timezone
 
 
 cache = caches['league']
@@ -13,9 +14,9 @@ cache = caches['league']
 def statslog(function):
     @wraps(function)
     def _statslog(instance, *args, **kwargs):
-        start = datetime.now()
+        start = timezone.now()
         result = function(instance, *args, **kwargs)
-        end = datetime.now()
+        end = timezone.now()
         logger = logging.getLogger('league')
         logger.info("%s\t%s\t%s\t%s" % (function.__name__, ', '.join(map(lambda x: str(x), args)), end - start,
                             instance))
@@ -25,9 +26,9 @@ def statslog(function):
 def statslog_func(function):
     @wraps(function)
     def _statslog(*args, **kwargs):
-        start = datetime.now()
+        start = timezone.now()
         result = function(*args, **kwargs)
-        end = datetime.now()
+        end = timezone.now()
         logger = logging.getLogger('league')
         logger.info("%s\t%s\t%s" % (function.__name__, ', '.join(map(lambda x: str(x), args)), end - start))
         return result
