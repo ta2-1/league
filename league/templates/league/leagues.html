@@ -14,16 +14,16 @@
         <li {% if request.path_info|resolved_url_name == 'league_rules' %}class="selected" {% endif %}>
           <a href="{% url "league_rules" %}">{% trans 'Правила расчета рейтинга' %}</a>
     		</li>
-    	</ul> 
+    	</ul>
     </div>
 {% endblock %}
 
 {% block extrastyle %}
 	{{ block.super }}
-	
-	
+
+
 	<style type="text/css">
-	
+
 	th.rating {
 		color: #D00;
 		/*border-right: 1px solid;
@@ -33,7 +33,7 @@
 		border-left-color: #D00;
 		border-right-color: #D00;*/
 	}
-	
+
 	td.rating {
 		color: #D00;
 		/*border-right: 1px solid;
@@ -58,12 +58,12 @@
 		opacity: 0.3;
 	}
     </style>
-	
+
 {% endblock %}
 
 {% block sponsors %}
     <div style="float:left">
-       
+
         <div style="margin-left: 150px;display:inline-block;">
             <p>Cпонсор</p>
             <a href="http://action.ru" rel="nofollow"><img style="height:80px" src="/assets/action.png"></a>
@@ -72,7 +72,7 @@
             <p>Организатор</p>
             <a href="http://squashfab.ru" rel="nofollow"><img style="height:80px" src="/assets/squash_logo.png"></a>
         </div>
-               
+
     </div>
 {% endblock %}
 
