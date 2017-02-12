@@ -3,14 +3,16 @@ from datetime import datetime, timedelta, time
 
 from django.core.cache import caches
 from django.db import models
-from django.db.models import Q, Count
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from rating.models import Competitor, Location
 from rating.utils import get_place_from_rating_list, get_place
-from league.utils import league_get_N, league_get_DELTA, update_rating_after, get_place_interval
-from league.utils import get_league_rating_datetime, statslog, leaguecompetitor_getfromcache
+from league.utils import (league_get_N, league_get_DELTA,
+                          update_rating_after, get_place_interval)
+from league.utils import (empty2dash, get_league_rating_datetime, statslog,
+                          leaguecompetitor_getfromcache)
 
 
 RATING_CHANGE_TYPE = (
@@ -26,26 +28,100 @@ def get_current_leagues():
     return list(League.objects.filter(is_current=True))
 
 
+class LeagueSettings(models.Model):
+    class Meta:
+        verbose_name = u'Настройки лиги'
+        verbose_name_plural = u'Настройки лиги'
+
+    title = models.CharField(
+        max_length=255,
+        verbose_name=u'Наименование',
+    )
+    soften_coef = models.PositiveIntegerField(
+        verbose_name=u'Смягчающий коэффициент',
+        default=20,
+    )
+    position_difference = models.PositiveIntegerField(
+        verbose_name=u'Допустимая разница в занимаемых позициях',
+        default=10
+    )
+    initial_rating = models.PositiveIntegerField(
+        verbose_name=u'Начальный рейтинг',
+        default=100,
+    )
+    reliability_rival_quantity = models.PositiveIntegerField(
+        verbose_name=u'Необходимое количество соперников для присвоения места',
+        default=4,
+    )
+    final_rival_quantity = models.PositiveIntegerField(
+        verbose_name=u'Необходимое количество соперников для присвоения '
+                     u'итогового места',
+        default = 10,
+    )
+    n_formula = models.CharField(
+        max_length=255,
+        verbose_name=u'Формула N',
+        default = 'result1 - result2',
+    )
+    delta_formula = models.CharField(
+        max_length=255,
+        verbose_name=u'Формула DELTA',
+        default = 'N + (r2-r1)/SOFTEN_COEF',
+    )
+
+    def __unicode__(self):
+        return u"%s" % self.title
+
+
 class League(models.Model):
     class Meta:
         verbose_name = u'Лига'
         verbose_name_plural = u'Лиги'
          
     title = models.CharField(u'Название', max_length=255)
-    competitors = models.ManyToManyField(Competitor, through='LeagueCompetitor', related_name='leagues')
+    competitors = models.ManyToManyField(
+        Competitor,
+        through='LeagueCompetitor',
+        related_name='leagues'
+    )
     
     start_date = models.DateField(verbose_name=u'Дата начала')
     end_date = models.DateField(verbose_name=u'Дата окончания')
     
-    tournament_a_datetime = models.DateTimeField(verbose_name=u'Дата и время турнира (A)', blank=True, null=True)
-    tournament_b_datetime = models.DateTimeField(verbose_name=u'Дата и время турнира (B)', blank=True, null=True)
-    location = models.ForeignKey(Location, verbose_name=u'Место проведения турнира', blank=True, null=True) 
-    is_tournament_data_filled = models.BooleanField(verbose_name=u'Данные введены полностью', default=False,)
+    tournament_a_datetime = models.DateTimeField(
+        verbose_name=u'Дата и время турнира (A)',
+        blank=True, null=True
+    )
+    tournament_b_datetime = models.DateTimeField(
+        verbose_name=u'Дата и время турнира (B)',
+        blank=True, null=True
+    )
+    location = models.ForeignKey(
+        Location,
+        verbose_name=u'Место проведения турнира',
+        blank=True, null=True
+    )
+    is_tournament_data_filled = models.BooleanField(
+        verbose_name=u'Данные введены полностью',
+        default=False,
+    )
     
-    settings = models.ForeignKey('LeagueSettings', verbose_name=u'Настройки лиги',)
-    visible = models.BooleanField(verbose_name=u'Отображать на сайте', default=True,)
-    is_current = models.BooleanField(verbose_name=u'Текущая', default=False,)
-    mark_unpaid_competitors = models.BooleanField(verbose_name=u'Отмечать неоплативших', default=False,)
+    settings = models.ForeignKey(
+        LeagueSettings,
+        verbose_name=u'Настройки лиги',
+    )
+    visible = models.BooleanField(
+        verbose_name=u'Отображать на сайте',
+        default=True,
+    )
+    is_current = models.BooleanField(
+        verbose_name=u'Текущая',
+        default=False,
+    )
+    mark_unpaid_competitors = models.BooleanField(
+        verbose_name=u'Отмечать неоплативших',
+        default=False,
+    )
 
     def __unicode__(self):
         return self.title
@@ -66,7 +142,9 @@ class League(models.Model):
         
     def get_last_rating_changed_datetime(self):
         try:
-            dt = Rating.objects.filter(league=self).order_by('-datetime')[:1][0].datetime
+            dt = Rating.objects.filter(
+                league=self
+            ).order_by('-datetime')[:1][0].datetime
         except:
             dt = timezone.now()
         
@@ -77,7 +155,10 @@ class League(models.Model):
 
         rivals_count = self.settings.final_rival_quantity
     
-        rcl = filter(lambda x: x['rival_count'] >= rivals_count, self.get_rating_competitor_list(league_date + timedelta(days=3)))
+        rcl = filter(
+            lambda x: x['rival_count'] >= rivals_count,
+            self.get_rating_competitor_list(league_date + timedelta(days=3))
+        )
         for i,x in enumerate(rcl):
             base = i+1 if i <= 15 else i-15
             if x['tournament_place'] != '-':
@@ -97,8 +178,9 @@ class League(models.Model):
         cache = caches['league']
         rcl = cache.get(cache_key)
         if rcl is None:           
-            lcc = LeagueCompetitor.objects.filter(league__id=self.id) \
-                                          .select_related('league', 'competitor')
+            lcc = LeagueCompetitor.objects.filter(
+                league__id=self.id
+            ).select_related('league', 'competitor')
             
             rcl = map(lambda x: 
                     {
@@ -106,8 +188,9 @@ class League(models.Model):
                        'rating':x.saved_rating(dt), 
                        'place': '-', 
                        'lc': x,
-                       'tournament_place': x.tournament_place if x.tournament_place != '' else '-',
-                       'sort_tournament_place': get_place(x.tournament_place) if x.tournament_place != '' else '-',
+                       'tournament_place': empty2dash(x.tournament_place),
+                       'sort_tournament_place': empty2dash(x.tournament_place,
+                                                           get_place),
                        'game_count': x.game_count(dt), 
                        'rival_count': x.rival_count(dt),
                        'last_game': x.last_game(dt)
@@ -161,26 +244,36 @@ class LeagueCompetitor(models.Model):
     paid = models.BooleanField(u'Оплатил', default=False)
     status = models.CharField(u'Статус', max_length=255, blank=True)
     tournament_place = models.CharField(u'Место', max_length=255, blank=True)
-    is_participant = models.BooleanField(u'Принимал участие в турнире', blank=True, default=False)
-    tournament_category = models.CharField(u'Категория турнира', blank=True, null=True,
-                                           choices=TOURNAMENT_CATEGORIES, max_length=4)
+    is_participant = models.BooleanField(u'Принимал участие в турнире',
+                                         blank=True, default=False)
+    tournament_category = models.CharField(u'Категория турнира', blank=True,
+                                           null=True, choices=TOURNAMENT_CATEGORIES,
+                                           max_length=4)
     
     def __unicode__(self):
-        return u"%s: %s %s" % (self.league.title, self.competitor.lastName, self.competitor.firstName)
+        return u"%s: %s %s" % (self.league.title, self.competitor.lastName,
+                               self.competitor.firstName)
 
-    def rating(self, datetime=datetime.now):
-        rr = Rating.objects.filter(league=self.league, player=self.competitor, datetime__lt=datetime).order_by('datetime')
+    def rating(self, datetime=timezone.now()):
+        rr = Rating.objects.filter(
+            league=self.league,
+            player=self.competitor,
+            datetime__lt=datetime
+        ).order_by('datetime')
+
         res = self.league.settings.initial_rating
-        
         for r in rr:
             res += r.delta
         
         return res
     
-    def saved_rating(self, datetime=datetime.now):
-        rr = Rating.objects.filter(league=self.league, player=self.competitor, datetime__lt=datetime).order_by('-datetime')[:1]
+    def saved_rating(self, datetime=timezone.now()):
+        rr = Rating.objects.filter(
+            league=self.league, player=self.competitor,
+            datetime__lt=datetime
+        ).order_by('-datetime')[:1]
+
         res = self.league.settings.initial_rating
-        
         if rr:
             res = rr[0].rating_after
         
@@ -191,7 +284,6 @@ class LeagueCompetitor(models.Model):
         for x in self.league.get_rating_competitor_list():
             if x['object'].id == self.competitor.id:
                 return x['rating']
-
 
         return None
  
@@ -206,15 +298,28 @@ class LeagueCompetitor(models.Model):
     def game_count(self, date_time=None):
         dt = timezone.now() if date_time is None else date_time
         
-        return Game.objects.filter(Q(league=self.league, no_record=False, end_datetime__lte=dt)&(Q(player1=self.competitor)|Q(player2=self.competitor))).count()
+        return Game.objects.filter(
+            Q(
+                league=self.league,
+                no_record=False,
+                end_datetime__lte=dt
+            ) & (
+                Q(player1=self.competitor) | Q(player2=self.competitor)
+            )
+        ).count()
         
     @leaguecompetitor_getfromcache
     def rival_count(self, date_time=None):
         dt = timezone.now() if date_time is None else date_time
         
         gg = Game.objects.filter(
-            Q(league=self.league, end_datetime__lte=dt, no_record=False)&
-            (Q(player1=self.competitor)|Q(player2=self.competitor))
+            Q(
+                league=self.league,
+                end_datetime__lte=dt,
+                no_record=False
+            ) & (
+                Q(player1=self.competitor) | Q(player2=self.competitor)
+            )
         )
 
         rivals = {}
@@ -226,14 +331,6 @@ class LeagueCompetitor(models.Model):
             rivals[player.id] = player
 
         return len(rivals.keys())
-        #count = Competitor.objects.filter(
-        #    ~Q(id=self.competitor.id)&
-        #    (Q(home_game_set__league=self.league)|Q(home_game_set__league__isnull=True))&
-        #    (Q(guest_game_set__league=self.league)|Q(guest_game_set__league__isnull=True))&
-        #    (Q(home_game_set__in=gg)|Q(guest_game_set__in=gg))
-        #).distinct().count()
-        #
-        #return count
 
     # for games where no_record is false
     def rivals(self, from_date_time=None, to_date_time=None):
@@ -258,17 +355,14 @@ class LeagueCompetitor(models.Model):
 
         return rivals.values()
 
-        #return Competitor.objects.filter(
-        #    ~Q(id=self.competitor.id)&
-        #    (Q(home_game_set__league=self.league)|Q(home_game_set__league__isnull=True))&
-        #    (Q(guest_game_set__league=self.league)|Q(guest_game_set__league__isnull=True))&
-        #    (Q(home_game_set__in=gg)|Q(guest_game_set__in=gg))
-        #).distinct()
-
     def last_game(self, date_time=None):
         dt = timezone.now() if date_time is None else date_time
         
-        gg = Game.objects.filter(Q(league=self.league, end_datetime__lte=dt) & (Q(player1=self.competitor)|Q(player2=self.competitor))).order_by('-end_datetime')[:1]
+        gg = Game.objects.filter(
+            Q(league=self.league, end_datetime__lte=dt) & (
+                Q(player1=self.competitor) | Q(player2=self.competitor)
+            )
+        ).order_by('-end_datetime')[:1]
         
         if gg:
             return gg[0]
@@ -277,7 +371,11 @@ class LeagueCompetitor(models.Model):
             
     def get_delta_rating(self, game):
         try:
-            d = Rating.objects.get(game=game, league=self.league, player=self.competitor)
+            d = Rating.objects.get(
+                game=game,
+                league=self.league,
+                player=self.competitor
+            )
         except:
             d = 0
         
@@ -288,7 +386,7 @@ class LeagueCompetitor(models.Model):
         place = -1
         for i, x in enumerate(trcl):
             if x['lc'].id == self.id:
-                place = i+1
+                place = i + 1
                 break
         
         if place >= 0:
@@ -411,56 +509,10 @@ class Rating(models.Model):
         self.rating_after = self.rating_before + self.delta
         super(Rating, self).save(*args, **kwargs)
         update_rating_after(self)
-        cache = get_cache('league')
+        cache = caches['league']
         dt_str = self.datetime.strftime("%Y-%m-%d")
         cache_key= u'rating_competitor_list_for_%d_league_%s' % (self.id, dt_str)
         cache.delete(cache_key)
 
     def __unicode__(self):
-        return u"%s (%f) - %s" % (self.player.lastName, self.delta, self.datetime) 
-
-
-class LeagueSettings(models.Model):
-    class Meta:
-        verbose_name = u'Настройки лиги'
-        verbose_name_plural = u'Настройки лиги'
-
-    title = models.CharField(
-        max_length=255,
-        verbose_name=u'Наименование',
-    )
-    soften_coef = models.PositiveIntegerField(
-        verbose_name=u'Смягчающий коэффициент',
-        default=20,
-    )
-    position_difference = models.PositiveIntegerField(
-        verbose_name=u'Допустимая разница в занимаемых позициях',
-        default=10
-    )
-    initial_rating = models.PositiveIntegerField(
-        verbose_name=u'Начальный рейтинг',
-        default=100,
-    )
-    reliability_rival_quantity = models.PositiveIntegerField(
-        verbose_name=u'Необходимое количество соперников для присвоения места',              
-        default=4,
-    )
-    final_rival_quantity = models.PositiveIntegerField(
-        verbose_name=u'Необходимое количество соперников для присвоения итогового места',              
-        default = 10,
-    )
-    n_formula = models.CharField(
-        max_length=255,
-        verbose_name=u'Формула N',
-        default = 'result1 - result2',
-    )
-    delta_formula = models.CharField(
-        max_length=255,
-        verbose_name=u'Формула DELTA',              
-        default = 'N + (r2-r1)/SOFTEN_COEF',
-    )
-
-    def __unicode__(self):
-        return u"%s" % self.title 
-
-
+        return u"%s (%f) - %s" % (self.player.lastName, self.delta, self.datetime)
