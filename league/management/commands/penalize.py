@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from optparse import make_option
 from datetime import datetime, timedelta, time
 from dateutil.relativedelta import relativedelta
 
@@ -11,12 +10,16 @@ from league.models import League, LeagueCompetitor, Rating
 
 class Command(BaseCommand):
     help = "Penalize competitors who does not play much."
-    shared_option_list = (
-        make_option('--month', dest='month', help='past month for penalties'),
-    )
 
-    option_list = BaseCommand.option_list + shared_option_list
-    current_league_id = 1008
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--month',
+            dest='month',
+            help='past month for penalties'
+        )
+        super(Command, self).add_arguments(parser)
+
+    current_league_id = 1010
 
     def handle(self, *args, **options):
         l = League.objects.get(id=self.current_league_id)

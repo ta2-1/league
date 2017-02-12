@@ -1,28 +1,26 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from optparse import make_option
-
-from datetime import datetime, timedelta, time
-from dateutil.relativedelta import relativedelta
-
 from django.core.management import call_command
-from django.core.management.base import BaseCommand, NoArgsCommand
+from django.core.management.base import BaseCommand
 
-from league.models import League, LeagueCompetitor, Game, Rating
-from league.utils import league_get_N, league_get_DELTA
+from league.models import League, Game, Rating
 
 
-class Command(NoArgsCommand):
+class Command(BaseCommand):
     help = "Recalculate league."
-    shared_option_list = (
-        make_option('--end', action='store_true', dest='is_finished',
-                    help='Flag if league is finished'),
-    )
-    option_list = NoArgsCommand.option_list + shared_option_list
 
-    def handle_noargs(self, **options):
-        league_id = 1008
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--end',
+            action='store_true',
+            dest='is_finished',
+            help='Flag if league is finished'
+        )
+        super(Command, self).add_arguments(parser)
+
+    def handle(self, **options):
+        league_id = 1010
         first_penalty_month = 3
         is_finished = options.get('is_finished', False)
         league = League.objects.get(id=league_id)
