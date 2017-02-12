@@ -128,3 +128,11 @@ def get_place_interval(place):
 
 def get_league_rating_datetime(dt):
     return dt.replace(hour=0, minute=0, second=0) + timedelta(days=1)
+
+
+def empty2dash(value, func=None):
+    if value != '':
+        if func is None:
+            return value
+        func(value)
+    return '-'

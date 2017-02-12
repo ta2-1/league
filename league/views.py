@@ -2,25 +2,24 @@ import json
 
 from datetime import datetime, timedelta
 
+from django.db.models import Q
 from django.shortcuts import redirect, get_object_or_404
 from django.http import HttpResponse, Http404, HttpResponseBadRequest
 from django.template import loader, RequestContext
 from django.conf import settings
+from django.contrib.flatpages.models import FlatPage
+from django.utils import timezone
+from django.views.decorators.cache import never_cache
+from django.views.generic import TemplateView
+
+from rest_framework import serializers, viewsets, generics, permissions, renderers, response
+from rest_framework.decorators import detail_route
 
 from rating.models import Competitor, Location
 from rating.genericviews import DetailedWithExtraContext as DetailView, ListViewWithExtraContext as ListView
 
 from league.models import get_current_leagues, Game, League, LeagueCompetitor, Rating
-from django.db.models import Q
 from league.utils import league_get_N, league_get_DELTA, get_league_rating_datetime
-
-from django.contrib.flatpages.models import FlatPage
-from django.utils import timezone
-from django.views.decorators.cache import never_cache
-
-from rest_framework import serializers, viewsets, generics, permissions, renderers, response
-from rest_framework.decorators import detail_route
-
 
 
 # Serializers define the API representation.
@@ -253,7 +252,7 @@ def competitor(request, league_id, competitor_id, template_name):
     
     i = 1
     rr = list(Rating.objects.filter(player__id=competitor_id, league__id=league_id)
-                            .select_related('competitor', 'league', 'game', 'game__player1',
+                            .select_related('player', 'league', 'game', 'game__player1',
                                             'game__player2', 'game__league')
                             .order_by('datetime')
     )

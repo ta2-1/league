@@ -77,8 +77,10 @@ def score(value, arg):
 
 @register.filter
 def match(value, arg):
+    if value is None:
+        return False
+
     prog = re.compile(arg)
-    
     return prog.match(value) != None
 
 @register.filter
