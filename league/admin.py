@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, time
 from django.contrib import admin
 from django.contrib.flatpages.models import FlatPage
 from django.contrib.flatpages.admin import FlatpageForm
-from django.core.cache import get_cache
+from django.core.cache import caches
 from django.core.urlresolvers import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
@@ -22,7 +22,7 @@ from rating.models import Competitor
 class LeagueCacheClearTranslationAdmin(TranslationAdmin):
     def save_model(self, request, obj, form, change):
         if obj.id:
-            cache = get_cache('league')
+            cache = caches['league']
             cache.delete_where('cache_key > ":1:rating_competitor_list_for_%d_league"' % obj.id)
             #cache.delete_where('cache_key LIKE ":1:rating_competitor_list_for_%d_league' % obj.id + '%"')
         
@@ -32,7 +32,7 @@ class LeagueCacheClearTranslationAdmin(TranslationAdmin):
 class LeagueSettingsCacheClearTranslationAdmin(TranslationAdmin):
     def save_model(self, request, obj, form, change):
         for l in obj.league_set.all():
-            cache = get_cache('league')
+            cache = caches['league']
             #cache.delete_where('cache_key > ":1:rating_competitor_list_for_%d_league"' % l.id)
             #cache.delete_where('cache_key LIKE ":1:rating_competitor_list_for_%d_league' % obj.id + '%"')
         
@@ -41,7 +41,7 @@ class LeagueSettingsCacheClearTranslationAdmin(TranslationAdmin):
 
 class GameCacheClearAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
-        cache = get_cache('league')
+        cache = caches['league']
         cache.delete_where('cache_key >= ":1:rating_competitor_list_for_%d_league_%s"' % (obj.league.id, obj.end_datetime.strftime("%Y-%m-%d")))
         league_prefix = ":1:rating_competitor_list_for_%d_league" % \
                         obj.league.id
@@ -54,7 +54,7 @@ class GameCacheClearAdmin(admin.ModelAdmin):
 
 class RatingCacheClearAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
-        cache = get_cache('league')
+        cache = caches['league']
         league_prefix = ":1:rating_competitor_list_for_%d_league" % \
                         obj.league.id
         where = ("cache_key LIKE '%(league_prefix)s%%' AND "

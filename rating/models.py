@@ -2,9 +2,11 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from rating.utils import get_points, get_place, get_place_from_rating_list
-from django.core.cache import cache
+from django.core.cache import caches
 from django.db.models import Count
 
+
+cache = caches['default']
 
 class Rule(models.Model):
     class Meta:

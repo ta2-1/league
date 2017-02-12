@@ -3,11 +3,12 @@ from functools import wraps
 import logging
 import re
 
+from django.core.cache import caches
 from django.db.models import Q
 
-from django.core.cache import get_cache
 
-cache = get_cache('league')
+cache = caches['league']
+
 
 def statslog(function):
     @wraps(function)

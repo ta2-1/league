@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, timedelta, time
 
-from django.core.cache import get_cache
+from django.core.cache import caches
 from django.db import models
 from django.db.models import Q, Count
 from django.utils.translation import ugettext_lazy as _
@@ -91,8 +91,9 @@ class League(models.Model):
 
         dt = get_league_rating_datetime(dt_param)
         dt_str = dt.strftime("%Y-%m-%d")
-        cache_key= u'rating_competitor_list_for_%d_league_%s' % (self.id, dt_str)
-        cache = get_cache('league')
+        cache_key= u'rating_competitor_list_for_%d_league_%s' % (
+            self.id, dt_str)
+        cache = caches['league']
         rcl = cache.get(cache_key)
         if rcl is None:           
             lcc = LeagueCompetitor.objects.filter(league__id=self.id) \
@@ -351,7 +352,7 @@ class Game(models.Model):
             if self.no_record:
                 delta = 0
             else:
-                cache = get_cache('league')
+                cache = caches['league']
                 cache.delete('%s:%s:%s' % (lc1.id, 'rival_count', date))
                 cache.delete('%s:%s:%s' % (lc2.id, 'rival_count', date))
                 cache.delete('%s:%s:%s' % (lc1.id, 'game_count', date))
