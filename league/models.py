@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, time
 from django.core.cache import caches
 from django.db import models
 from django.db.models import Q, Count
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from rating.models import Competitor, Location
@@ -67,7 +68,7 @@ class League(models.Model):
         try:
             dt = Rating.objects.filter(league=self).order_by('-datetime')[:1][0].datetime
         except:
-            dt = datetime.now()
+            dt = timezone.now()
         
         return dt
                     
@@ -85,7 +86,7 @@ class League(models.Model):
         return rcl
     
     def get_rating_competitor_list(self, date_time=None):
-        dt_param = datetime.now() if date_time is None else date_time
+        dt_param = timezone.now() if date_time is None else date_time
         
         rivals_count = self.settings.reliability_rival_quantity
 
@@ -129,7 +130,9 @@ class League(models.Model):
     
     def is_ended(self):
         league_date = datetime.combine(self.end_date, time())
-        dt = datetime.now().replace(hour=0, minute=0, second=0) - timedelta(days=2)
+        dt = timezone.make_naive(
+            timezone.now().replace(hour=0, minute=0, second=0)
+        ) - timedelta(days=2)
     
         return dt >= league_date
 
@@ -201,13 +204,13 @@ class LeagueCompetitor(models.Model):
     
     @leaguecompetitor_getfromcache
     def game_count(self, date_time=None):
-        dt = datetime.now() if date_time is None else date_time
+        dt = timezone.now() if date_time is None else date_time
         
         return Game.objects.filter(Q(league=self.league, no_record=False, end_datetime__lte=dt)&(Q(player1=self.competitor)|Q(player2=self.competitor))).count()
         
     @leaguecompetitor_getfromcache
     def rival_count(self, date_time=None):
-        dt = datetime.now() if date_time is None else date_time
+        dt = timezone.now() if date_time is None else date_time
         
         gg = Game.objects.filter(
             Q(league=self.league, end_datetime__lte=dt, no_record=False)&
@@ -263,7 +266,7 @@ class LeagueCompetitor(models.Model):
         #).distinct()
 
     def last_game(self, date_time=None):
-        dt = datetime.now() if date_time is None else date_time
+        dt = timezone.now() if date_time is None else date_time
         
         gg = Game.objects.filter(Q(league=self.league, end_datetime__lte=dt) & (Q(player1=self.competitor)|Q(player2=self.competitor))).order_by('-end_datetime')[:1]
         
