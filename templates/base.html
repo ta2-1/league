@@ -21,7 +21,6 @@
 		<div id="menu">
 			<ul>
 				<li {% if request.path_info|match:"^/tournaments" %}class="selected" {% endif %}><a href="{% url "tournaments" %}">{% trans "Рейтинг игроков в сквош" %}</a></li>
-				<li {% if request.path_info|match:"^/leagues" %}class="selected" {% endif %}><a href="{% url "leagues" %}">{% trans "Московская сквош-лига" %}</a></li>
 				<li {% if request.path_info|match:"^/competitors" %}class="selected" {% endif %}><a href="{% url "competitors" %}">{% trans "Участники" %}</a></li>
 			</ul>
 		</div>
@@ -86,21 +85,5 @@ reformal_wdg_bimage = "7688f5685f7701e97daa5497d3d9c745.png";
 {% endblock %}
 
 {% block footer %}
-<div class="hFooter"></div>
-<div id="footer">
-	<ul>
-		<li>©  2011 — {% now "Y" %}</li>
-		<li><strong>kortov.net</strong></li>
-	</ul>
-    <!--LiveInternet counter--><script type="text/javascript"><!--
-document.write("<a href='http://www.liveinternet.ru/click' "+
-"target=_blank><img src='//counter.yadro.ru/hit?t26.12;r"+
-escape(document.referrer)+((typeof(screen)=="undefined")?"":
-";s"+screen.width+"*"+screen.height+"*"+(screen.colorDepth?
-screen.colorDepth:screen.pixelDepth))+";u"+escape(document.URL)+
-";h"+escape(document.title.substring(0,80))+";"+Math.random()+
-"' alt='' title='" + "{% trans 'LiveInternet: показано количество посетителей за сегодня' %}" + "' " +
-"border='0' width='88' height='15'><\/a>")
-//--></script><!--/LiveInternet-->
-</div>
+  {% include "footer.html" %}
 {% endblock %}

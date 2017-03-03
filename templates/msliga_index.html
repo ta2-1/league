@@ -1,0 +1,82 @@
+{% extends "msliga_base.html" %}
+
+{% load i18n rating_tags %}
+
+
+{% block content %}
+<div class="text">
+{% autoescape off %}
+   {{flatpage.content}}
+{% endautoescape %}
+</div>
+
+  {% for item in current_leagues %}
+    {% with league=item.league top=item.top %}
+  <div class="top-list">
+
+	{% if league.is_ended %}
+    <h3>{{ league.title }}<br/>{% trans "Итоговый рейтинг TOP-16" %}</h3>
+    <p class="lm-date">{% trans "Даты проведения:" %} {% trans "c" %} {{league.start_date}} {% trans "по" %} {{league.end_date}}</p>
+    {% if league.is_tournament_data_filled %}
+    <p class="lm-date">{% trans "Итоговый турнир:" %} {{league.tournament_a_datetime|date:"DATE_FORMAT"}}</p>
+   	{% endif %}
+    <table>
+		<theader>
+        {% if league.is_tournament_data_filled %}
+			<th>{% trans "Место" %}</th>
+        {% else %}
+			<th>№</th>
+        {% endif %}
+			<th>{% trans "Участник" %}</th>
+            {% if league.is_tournament_data_filled %}
+			<th>{% trans "+/-" %}</th>
+            {% endif %}
+ 			<th>{% trans "Рейтинг" %}</th>
+		</theader>
+		<tbody>
+        {% if league.is_tournament_data_filled %}
+            {% for c in league.get_total_rating_competitor_list|slice:":16"|dictsort:"sort_tournament_place" %}
+                <tr>
+                    <td>{{c.tournament_place}}</td>
+                    <td class="td_name"><a href="{% url "competitor_league" c.object.id c.lc.league.id %}">{{c.object.id|get_competitor_attr:"lastName"}} {{c.object.id|get_competitor_attr:"firstName"}}</a></td>
+                    <td>{% autoescape off %}{{c.place_delta|show_arrow}}{% endautoescape %}</td>
+                    <td>{{c.rating|floatformat:2}}</td>
+                </tr>
+            {% endfor %}
+		</tbody>
+        {% else %}
+            {% for c in league.get_total_rating_competitor_list|slice:":16" %}
+                <tr>
+                    <td>{{forloop.counter}}</td>
+                    <td class="td_name"><a href="{% url "competitor_league" c.object.id c.lc.league.id %}">{{c.object.id|get_competitor_attr:"lastName"}} {{c.object.id|get_competitor_attr:"firstName"}}</a></td>
+                    <td>{{c.rating|floatformat:2}}</td>
+                </tr>
+            {% endfor %}
+        {% endif %}
+	</table>
+    {% else %}
+    <h3>{{ league.title }}<br/>{% trans "TOP-16 в рейтинге" %}</h3>
+    <p class="lm-date">{% trans "По состоянию на" %} {{current_rating_datetime}}</p>
+	<table>
+		<theader>
+			<th>№</th>
+			<th>{% trans "Участник" %}</th>
+			<th>{% trans "Рейтинг" %}</th>
+		</theader>
+		<tbody>
+		{% for c in top %}
+			<tr>
+				<td>{{c.place}}</td>
+				<td class="td_name"><a href="{% url "competitor_league" c.object.id c.lc.league.id %}">{{c.object.id|get_competitor_attr:"lastName"}} {{c.object.id|get_competitor_attr:"firstName"}}</a></td>
+				<td>{{c.rating|floatformat:2}}</td>
+			</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+    {% endif %}
+</div>
+    {% endwith %}
+  {% endfor %}
+{% endblock %}
+
+

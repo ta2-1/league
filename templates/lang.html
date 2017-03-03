@@ -1,0 +1,10 @@
+<div class="lang">
+  {% for l in LANGUAGES %}
+    {% if l.0 == LANGUAGE_CODE %}
+      <strong>{{l.0|capfirst}}</strong>
+    {% else %}
+      <a href="/i18n/setlang?language={{l.0}}"{{l.0|capfirst}}>{{l.0|capfirst}}</a>
+    {% endif %}
+    {% if forloop.first %}/{% endif %}
+  {% endfor %}
+</div>

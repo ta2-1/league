@@ -8,24 +8,9 @@
 
 {% block content %}
   <h1>{{object.firstName}} {{object.lastName}}</h1>
-<div class="tabs">
-	<ul>
-		<li class="selected">
-			<a href="{% url "competitor" object.id %}">{% trans "Турниры" %}</a>
-		</li>
-		{% if object.leaguecompetitor_set.count > 0 %}
-        <li>
-            <a href="{% url "competitor_leagues" object.id %}">{% trans "Лига" %}</a>
-		</li>
-		<li>
-			<a href="{% url "competitor_rivals" object.id %}">{% trans "Статистика матчей" %}</a>
-		</li>
-
-    {% endif %}
-	</ul>
-</div>
 
 <div id="params">
+  <h3>{% trans "Рейтинг по категориям" %}</h3>
   <table>
 	  <theader>
 	    <th>{% trans "Категория" %}</th>
@@ -45,6 +30,7 @@
 
 </div>
 <div id="table">
+<h3>{% trans "Турниры" %}</h3>
 <table>
 	<theader>
 	<th>{% trans "№" %}</th>

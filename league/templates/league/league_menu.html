@@ -1,0 +1,25 @@
+{% load i18n rating_tags %}
+{% with request.path_info|resolved_url_name as url_name %}
+<ul>
+  <li {% if url_name == 'league_rating' %}class="selected"{% endif %}>
+    <a href="{% url "league_rating" league.id %}">{% trans "Лига" %}</a>
+  </li>
+  <li {% if url_name == 'league_games' %}class="selected"{% endif %}>
+    <a href="{% url "league_games" league.id %}">{% trans "Игры" %}</a>
+  </li>
+  <li {% if url_name == 'league_penalties' %}class="selected"{% endif %}>
+    <a href="{% url "league_penalties" league.id %}">{% trans "Штрафы" %}</a>
+  </li>
+  {% if league.is_ended %}
+  <li {% if url_name == 'league_results' %}class="selected"{% endif %}>
+    <a href="{% url "league_results" league.id %}">{% trans "Результаты" %}</a>
+  </li>
+  {% endif %}
+  <li {% if url_name == 'league_statement' %}class="selected" {% endif %}>
+    <a href="{% url "league_statement" %}">{% trans 'Положение лиги' %}</a>
+  </li>
+  <li {% if url_name == 'league_rules' %}class="selected" {% endif %}>
+    <a href="{% url "league_rules" %}">{% trans 'Правила расчета рейтинга' %}</a>
+  </li>
+</ul>
+{% endwith %}

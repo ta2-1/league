@@ -1,0 +1,100 @@
+{% load googleanalytics static i18n rating_tags %}
+<html lang="{{ LANGUAGE_CODE|default:"en-us" }}">
+<head>
+<title>{% block title %}{% endblock %}</title>
+<link rel="stylesheet" type="text/css" href="{% block stylesheet %}{% static "league/css/base.css" %}{% endblock %}" />
+{% block extrastyle %}
+  <link rel="stylesheet" type="text/css" href="{% static "league/css/styles.css" %}" />
+{% endblock %}
+{% block extrahead %}{% endblock %}
+{% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE" />{% endblock %}
+{% analytics %}
+<link rel="shortcut icon" href="{% static "ball.png" %}"/>
+<meta name="verify-reformal" content="858adb9307fbb88703257585" />
+</head>
+
+<body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}">
+
+<!-- Container -->
+<div id="container">
+
+    {% if not is_popup %}
+    <!-- Header -->
+    <div id="header">
+        <div id="branding">
+        {% block branding %}
+          <a href="/">
+            <img src="{% static "images/msliga.png" %}"/>
+          </a>
+        {% endblock %}
+        </div>
+        {% block nav-global %}
+        {% endblock %}
+
+    </div>
+    <!-- END Header -->
+    {% block breadcrumbs %}
+          <div class="tabs menu">
+    	<ul>
+    		<li {% if request.path_info|resolved_url_name|is_in:"league_list" %}class="selected" {% endif %}>
+          <a href="{% url "league_list" %}">{% trans 'Все лиги' %}</a>
+    		</li>
+    	</ul>
+      {% block search %}
+        <div
+            class="ya-site-form ya-site-form_inited_no"
+            onclick="return {'bg': '#ffffff', 'target': '_self', 'language': 'ru', 'suggest': true, 'tld': 'ru', 'site_suggest': true, 'action': 'http://kortov.net/search', 'webopt': false, 'fontsize': 12, 'arrow': true, 'fg': '#000000', 'searchid': '1930273', 'logo': 'rb', 'websearch': false, 'type': 3}"
+        >
+          <form
+              action="http://yandex.ru/sitesearch"
+              method="get" target="_self"
+          >
+            <input type="hidden" name="searchid" value="1930273" />
+            <input type="hidden" name="l10n" value="ru" />
+            <input type="hidden" name="reqenc" value="" />
+            <input type="text" name="text" value="" />
+            <input type="submit" value="Найти" />
+          </form>
+        </div>
+        <style type="text/css">
+          .ya-page_js_yes .ya-site-form_inited_no { display: none; }
+        </style>
+        <script type="text/javascript">
+          (function(w,d,c){var s=d.createElement('script'),h=d.getElementsByTagName('script')[0],e=d.documentElement;(' '+e.className+' ').indexOf(' ya-page_js_yes ')===-1&&(e.className+=' ya-page_js_yes');s.type='text/javascript';s.async=true;s.charset='utf-8';s.src=(d.location.protocol==='https:'?'https:':'http:')+'//site.yandex.net/v2.0/js/all.js';h.parentNode.insertBefore(s,h);(w[c]||(w[c]=[])).push(function(){Ya.Site.Form.init()})})(window,document,'yandex_site_callbacks');
+        </script>
+      {% endblock %}
+      {% include "lang.html" %}
+    </div>
+
+    {% endblock %}
+    {% endif %}
+
+        {% if messages %}
+        <ul class="messagelist">{% for message in messages %}
+          <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+	{% endfor %}</ul>
+        {% endif %}
+
+    <!-- Contenti15 -->
+    <div id="content" class="{% block coltype %}colM{% endblock %}">
+        {% block pretitle %}{% endblock %}
+        {% block content %}
+        {% block content_title %}{% if title %}<h1>{{ title }}</h1>{% endif %}{% endblock %}
+        {% block object-tools %}{% endblock %}
+        {{ content }}
+        {% endblock %}
+        {% block sidebar %}{% endblock %}
+        <br class="clear" />
+    </div>
+    <!-- END Content -->
+
+    {% block footer %}
+      <div id="footer">
+        {% include "footer.html" %}
+      </div>
+    {% endblock %}
+</div>
+<!-- END Container -->
+    {% block reformal %}{% endblock %}
+</body>
+</html>
