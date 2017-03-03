@@ -11,20 +11,7 @@
 <h1>{{league.title}}</h1>
 <p class="lm-date">{% trans "Даты проведения" %}: <span>{{league.start_date}}&nbsp;&dash;&nbsp;{{league.end_date}}</span></p>
 <div class="tabs">
-	<ul>
-		<li>
-			<a href="{% url "league_rating" league.id %}">{% trans 'Лига' %}</a>
-		</li>
-		<li>
-			<a href="{% url "league_games" league.id %}">{% trans 'Игры' %}</a>
-		</li>
-		<li>
-			<a href="{% url "league_penalties" league.id %}">{% trans 'Штрафы' %}</a>
-		</li>
-        <li class="selected">
-			<a href="{% url "league_results" league.id %}">{% trans 'Результаты' %}</a>
-		</li>
-	</ul>
+	{% include "league/league_menu.html" %}
 </div>
 </div>
 

@@ -1,6 +1,6 @@
-{% extends "base.html" %}
+{% extends "msliga_base.html" %}
 
-{% load i18n rating_tags%}
+{% load i18n rating_tags %}
 
 {% block title %}
 {{object.firstName }} {{object.lastName }} — {{leaguecompetitor.league.title}} — {{block.super}}
@@ -45,11 +45,9 @@
 
 {% block content %}
   <h1>{{object.firstName}} {{object.lastName}}</h1>
+  <div class="tournaments"><a href="{{ kortov_net.domain }}{% url "competitor" object.id %}">{% trans "Статистика участия в турнирах" %}</a></div>
 <div class="tabs">
 	<ul>
-		<li>
-			<a href="{% url "competitor" object.id %}">{% trans "Турниры" %}</a>
-		</li>
 		<li class="selected">
 			<a href="{% url "competitor_leagues" object.id %}">{% trans "Лига" %}</a>
 		</li>
@@ -95,6 +93,7 @@
 		{% endfor %}
 	</tbody>
 </table>
+
 </div>
 
 {% if leaguecompetitor %}
