@@ -7,6 +7,8 @@ from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
+from django_rq import job
+
 from rating.models import Competitor, Location
 from rating.utils import get_place_from_rating_list, get_place
 from league.utils import (league_get_N, league_get_DELTA,
@@ -446,36 +448,7 @@ class Game(models.Model):
         super(Game, self).save(*args, **kwargs)
         
         if self.result1 > 0 or self.result2 > 0:
-            lc1 = LeagueCompetitor.objects.get(league=self.league, competitor=self.player1)
-            lc2 = LeagueCompetitor.objects.get(league=self.league, competitor=self.player2)
-            (r1, r2) = map(lambda x: x.rating(self.end_datetime), (lc1, lc2))
-            date = self.end_datetime.strftime("%Y-%m-%d") 
-            if self.no_record:
-                delta = 0
-            else:
-                cache = caches['league']
-                cache.delete('%s:%s:%s' % (lc1.id, 'rival_count', date))
-                cache.delete('%s:%s:%s' % (lc2.id, 'rival_count', date))
-                cache.delete('%s:%s:%s' % (lc1.id, 'game_count', date))
-                cache.delete('%s:%s:%s' % (lc2.id, 'game_count', date))
-
-
-                min_rival_count = min(lc1.rival_count(self.start_datetime), lc2.rival_count(self.start_datetime))
-                n = league_get_N(self.league.settings, self.result1, self.result2)
-                delta = league_get_DELTA(self.league.settings, r1, r2, n, min_rival_count)
-               
-            if Rating.objects.filter(league=self.league, game=self).count() == 0:
-                rating1 = Rating(league=self.league, type='game', game=self, datetime=self.end_datetime, player=self.player1, delta=delta, rating_before=r1)
-                rating2 = Rating(league=self.league, type='game', game=self, datetime=self.end_datetime, player=self.player2, delta=0-delta, rating_before=r2)
-            else:
-                rating1 = Rating.objects.get(league=self.league, game=self, player=self.player1)
-                rating2 = Rating.objects.get(league=self.league, game=self, player=self.player2)
-                rating1.delta = delta
-                rating2.delta = 0-delta
-                
-            rating1.save()
-            rating2.save()
-
+            self.update_rating()
             
     def get_player_result(self, player):
         if player == self.player1:
@@ -486,6 +459,43 @@ class Game(models.Model):
     @property
     def rating_delta(self):
         return Rating.objects.get(player=self.player1, game=self).delta
+
+    def update_rating(self):
+        add_update_rating_job.delay(self)
+
+
+@job
+def add_update_rating_job(game):
+    lc1 = LeagueCompetitor.objects.get(league=game.league, competitor=game.player1)
+    lc2 = LeagueCompetitor.objects.get(league=game.league, competitor=game.player2)
+    (r1, r2) = map(lambda x: x.rating(game.end_datetime), (lc1, lc2))
+    date = game.end_datetime.strftime("%Y-%m-%d")
+    if game.no_record:
+        delta = 0
+    else:
+        cache = caches['league']
+        cache.delete('%s:%s:%s' % (lc1.id, 'rival_count', date))
+        cache.delete('%s:%s:%s' % (lc2.id, 'rival_count', date))
+        cache.delete('%s:%s:%s' % (lc1.id, 'game_count', date))
+        cache.delete('%s:%s:%s' % (lc2.id, 'game_count', date))
+
+        min_rival_count = min(lc1.rival_count(game.start_datetime), lc2.rival_count(game.start_datetime))
+        n = league_get_N(game.league.settings, game.result1, game.result2)
+        delta = league_get_DELTA(game.league.settings, r1, r2, n, min_rival_count)
+
+    if Rating.objects.filter(league=game.league, game=game).count() == 0:
+        rating1 = Rating(league=game.league, type='game', game=game, datetime=game.end_datetime, player=game.player1,
+                         delta=delta, rating_before=r1)
+        rating2 = Rating(league=game.league, type='game', game=game, datetime=game.end_datetime, player=game.player2,
+                         delta=0 - delta, rating_before=r2)
+    else:
+        rating1 = Rating.objects.get(league=game.league, game=game, player=game.player1)
+        rating2 = Rating.objects.get(league=game.league, game=game, player=game.player2)
+        rating1.delta = delta
+        rating2.delta = 0 - delta
+
+    rating1.save()
+    rating2.save()
 
 
 class Rating(models.Model):
