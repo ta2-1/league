@@ -104,6 +104,3 @@ def win_or_lose(value, arg):
         return 'win'
     else:
         return 'lose'
-    
-
-    
