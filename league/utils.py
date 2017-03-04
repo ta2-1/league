@@ -134,5 +134,5 @@ def empty2dash(value, func=None):
     if value != '':
         if func is None:
             return value
-        func(value)
+        return func(value)
     return '-'
