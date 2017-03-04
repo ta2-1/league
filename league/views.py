@@ -427,16 +427,25 @@ def competitor_opponents(request, league_id, competitor_id):
     try:
         if request.GET.has_key('date'):
             date = datetime.strptime(request.GET['date'], '%d.%m.%Y')
-
-            dt = date.replace(hour=3, minute=0, second=0)
+            dt = date.replace(hour=0, minute=0, second=0)
         else:
             dt = None
     except:
         dt = None
 
-    r = get_possible_opponents(lc, dt)
-    ol = map(lambda x: {'id': x['object'].id, 'name': u'%s %s' % (x['object'].lastName, x['object'].firstName )}, r)
-    
+    ol = list(lc.league.leaguecompetitor_set.exclude(
+        id=lc.id
+    ).values('id', 'competitor__firstName', 'competitor__lastName'))
+    for x in ol:
+        x.update(
+            {
+                'name': u"%s %s" % (
+                    x['competitor__firstName'],
+                    x['competitor__lastName']
+                )
+            }
+        )
+
     json_data = json.dumps({'HTTPRESPONSE':1, 'data': ol}, ensure_ascii=False)
     
     return HttpResponse(json_data, content_type="application/json")
