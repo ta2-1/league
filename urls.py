@@ -20,15 +20,6 @@ router.register(r'locations', LocationViewSet)
 router.register(r'games', GameViewSet)
 
 urlpatterns = [
-    # Examples:
-    # url(r'^$', 'squash.views.home', name='home'),
-    # url(r'^squash/', include('squash.foo.urls')),
-
-    # Uncomment the admin/doc line below to enable admin documentation:
-    # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
-
-    # Uncomment the next line to enable the admin:
-    #url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': os.path.join(settings.PROJECT_PATH,'static')}),
 
     url(r'^$', rating_views.IndexView.as_view(), {}, name="index"),
     url(r'^search/$', rating_views.search, {'template_name': 'search.html'}),
@@ -56,9 +47,9 @@ urlpatterns = [
     url(r'^leagues/$', league_views.LeaguesView.as_view(), {}, name='leagues'),
     url(r'^leagues/list/$', league_views.league_list, {'template_name': 'league/object_list.html'}, name='league_list'),
     url(r'^leagues/(?P<league_id>\d+)/$', league_views.LeagueRatingView.as_view(), {}, name='league_rating'),
-    url(r'^leagues/(?P<league_id>\d+)/games/$', league_views.league_games, {'template_name': 'league/games.html'}, name='league_games'),
-    url(r'^leagues/(?P<league_id>\d+)/results/$', league_views.league_results, {'template_name': 'league/results.html'}, name='league_results'),
-    url(r'^leagues/(?P<league_id>\d+)/penalties/$', league_views.league_penalties, {'template_name': 'league/penalties.html'}, name='league_penalties'),
+    url(r'^leagues/(?P<league_id>\d+)/games/$', league_views.LeagueGamesView.as_view(), {}, name='league_games'),
+    url(r'^leagues/(?P<league_id>\d+)/results/$', league_views.LeagueResultsView.as_view(), {}, name='league_results'),
+    url(r'^leagues/(?P<league_id>\d+)/penalties/$', league_views.LeaguePenaltiesView.as_view(), {}, name='league_penalties'),
     url(r'^leagues/(?P<league_id>\d+)/competitors/(?P<competitor_id>\d+)/gamerivals/$', league_views.competitor_game_rivals, {'template_name': 'league/competitor_game_rivals.html'}, name='competitor_game_rivals'),
 
     url(r'^leagues/statement/$', league_views.flatpage, name='league_statement'),
