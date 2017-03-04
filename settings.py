@@ -141,7 +141,7 @@ MIDDLEWARE_CLASSES = (
 
 )
 
-DEBUG_TOOLBAR_PANELS_1 = [
+DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.versions.VersionsPanel',
     'debug_toolbar.panels.timer.TimerPanel',
     'debug_toolbar.panels.settings.SettingsPanel',
@@ -178,7 +178,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
 
     'django.contrib.flatpages',
-
+    'django_rq',
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
@@ -190,6 +190,7 @@ INSTALLED_APPS = (
     'analytics',
     'rating',
     'league',
+
 
     #'rosetta',
     #'emailconfirmation',
@@ -281,3 +282,63 @@ ALLOWED_HOSTS = ['127.0.0.1',]
 #SHOW_COLLAPSED = True
 #SHOW_TOOLBAR_CALLBACK = 'debug_toolbar.middleware.show_toolbar'
 #SHOW_TOOLBAR_CALLBACK = 'middlewares.middleware.show_toolbar'
+
+RQ_QUEUES = {
+    'default': {
+        'HOST': 'localhost',
+        'PORT': 6379,
+        'DB': 14,
+        'DEFAULT_TIMEOUT': 360,
+    },
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'league': {
+            'format' : "[%(asctime)s]\t%(message)s",
+            'datefmt' : "%d/%b/%Y %H:%M:%S"
+        },
+    },
+    'handlers': {
+        'all': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(PROJECT_PATH, "log/all.log"),
+            'level': 'DEBUG',
+            'backupCount': 5,
+            'maxBytes': 1024 * 1024 * 5,
+            'formatter': 'league',
+        },
+        'league': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(PROJECT_PATH, "log/league.log"),
+            'backupCount': 5,
+            'maxBytes': 1024 * 1024 * 5,
+            'formatter': 'league',
+        },
+        'update_rating': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(PROJECT_PATH, "log/update_rating.log"),
+            'backupCount': 5,
+            'maxBytes': 1024*1024*5,
+            'formatter': 'league',
+        }
+    },
+    'loggers': {
+        'league': {
+            'handlers': ['league'],
+            'level': 'INFO',
+        },
+        'rq.worker': {
+            'handlers': ['update_rating'],
+            'level': 'DEBUG',
+        },
+        #'': {
+        #    'handlers': ['all'],
+        #    'level': 'DEBUG',
+        #}
+    }
+}
+
+# SITE_ID = 2
