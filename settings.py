@@ -174,6 +174,7 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
+    'airavata',
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
@@ -341,4 +342,5 @@ LOGGING = {
     }
 }
 
-# SITE_ID = 2
+from airavata.utils import AllowedSites
+ALLOWED_HOSTS = AllowedSites()

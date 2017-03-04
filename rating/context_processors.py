@@ -1,10 +1,10 @@
 from django.contrib.sites.models import Site
-
+from django.contrib.sites.shortcuts import get_current_site
 from django.utils import timezone
 
 
 def site(request):
-    return {'site': Site.objects.get_current()}
+    return {'site': get_current_site(request)}
 
 
 def current_rating_datetime(request):

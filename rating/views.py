@@ -99,7 +99,8 @@ class IndexView(TemplateView):
         if not url.startswith('/'):
             url = "/" + url
 
-        f = get_object_or_404(FlatPage, url__exact=url, sites__id__exact=settings.SITE_ID)
+        site = get_current_site(self.request)
+        f = get_object_or_404(FlatPage, url__exact=url, sites__id__exact=site.id)
 
         return {
             'categories': cc,
