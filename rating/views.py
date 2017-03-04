@@ -8,6 +8,7 @@ from django.http import HttpResponse
 
 from django.core.urlresolvers import reverse
 from django.shortcuts import redirect, get_object_or_404
+from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.flatpages.models import FlatPage
 from django.views.decorators.cache import cache_page
 from django.views.generic import TemplateView
@@ -54,7 +55,14 @@ class RulesView(TemplateView):
 
 
 class IndexView(TemplateView):
-    template_name = 'index.html'
+
+    @property
+    def template_name(self):
+        site = get_current_site(self.request)
+        if site.id == 1:
+            return 'index.html'
+        else:
+            return 'msliga_index.html'
 
     def get_context_data(self, **kwargs):
         cc = []

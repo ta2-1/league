@@ -54,9 +54,6 @@ LANGUAGES = [
     ('en', gettext('English')),
 ]
 
-SITE_ID = 1
-
-
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
 MEDIA_ROOT = os.path.join(PROJECT_PATH, "media")
@@ -119,6 +116,8 @@ TEMPLATES = [
 
                 "rating.context_processors.site",
                 "rating.context_processors.current_rating_datetime",
+                "rating.context_processors.kortov_net",
+                "rating.context_processors.msliga",
             ],
             'loaders': [
                 'django.template.loaders.filesystem.Loader',
