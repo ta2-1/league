@@ -169,11 +169,13 @@ def get_league_result_context(league):
         'rcl_b': rcl_b,
     }
 
-
-class LeagueRatingView(DetailView):
-    template_name = 'league/rating.html'
+class LeagueDetailView(DetailView):
     model = League
     pk_url_kwarg = 'league_id'
+
+
+class LeagueRatingView(LeagueDetailView):
+    template_name = 'league/rating.html'
 
     def get_context_data(self, **kwargs):
         try:
@@ -190,54 +192,54 @@ class LeagueRatingView(DetailView):
         return get_league_rating_context(self.get_object(), dt)
 
 
-@never_cache
-def league_results(request, league_id, template_name):
-    league = League.objects.get(id=league_id)
+class LeagueResultsView(LeagueDetailView):
+    template_name = 'league/results.html'
 
-    if not league.is_ended():
-        return redirect('/leagues/%s' % league.id)
+    def get(self, request, *args, **kwargs):
+        league = self.get_object()
+        if league.is_ended():
+            return super(LeagueResultsView, self).get(request, *args, **kwargs)
+        else:
+            return redirect('/leagues/%s' % league.id)
 
-    ctx = get_league_result_context(league)
-    t = loader.get_template(template_name)
-    return HttpResponse(t.render(RequestContext(request, ctx)))
-
-
-@never_cache
-def league_games(request, league_id, template_name):
-    league = League.objects.get(id=league_id)
-    games = Game.objects.filter(league__id=league_id) \
-                        .select_related('location', 'player1', 'player2', 'league') \
-                        .order_by('-end_datetime')
-    num = 0
-    for game in games:
-        if not game.no_record:
-            num += 1
-            game.number = num
-
-    t = loader.get_template(template_name)
-
-    c = RequestContext(request, {
-        'league': league,
-        'object_list': games,
-    },)
-    
-    return HttpResponse(t.render(c))
+    def get_context_data(self, **kwargs):
+        return get_league_result_context(self.get_object())
 
 
-@never_cache
-def league_penalties(request, league_id, template_name):
-    league = League.objects.get(id=league_id)
-    rr = Rating.objects.filter(league__id=league_id, type='penalty') \
-                       .select_related('league', 'player') \
-                       .order_by('datetime')
-    t = loader.get_template(template_name)
+class LeagueGamesView(LeagueDetailView):
+    template_name = 'league/games.html'
 
-    c = RequestContext(request, {
-        'league': league,
-        'object_list': rr,
-    },)
-    
-    return HttpResponse(t.render(c))
+    def get_context_data(self, **kwargs):
+        games = Game.objects.filter(league=self.get_object()) \
+                            .select_related('location', 'player1', 'player2', 'league') \
+                            .order_by('-end_datetime')
+        num = 0
+        for game in games:
+            if not game.no_record:
+                num += 1
+                game.number = num
+
+        return {
+            'league': self.get_object(),
+            'object_list': games,
+        }
+
+
+class LeaguePenaltiesView(LeagueDetailView):
+    template_name = 'league/penalties.html'
+
+    def get_context_data(self, **kwargs):
+
+        rr = Rating.objects.filter(
+            league=self.get_object(),
+            type='penalty'
+        ).select_related('league', 'player').order_by('datetime')
+
+        return {
+            'league': self.get_object(),
+            'object_list': rr,
+        }
+
 
 @never_cache
 def competitor(request, league_id, competitor_id, template_name):
