@@ -12,8 +12,8 @@ def current_rating_datetime(request):
 
 
 def kortov_net(request):
-    return {'kortov_net': Site.objects.get(id=1)}
+    return {'kortov_net': Site.objects.get(domain='kortov.net')}
 
 
 def msliga(request):
-    return {'msliga': Site.objects.get(id=2)}
+    return {'msliga': Site.objects.get(domain='msliga.ru')}
