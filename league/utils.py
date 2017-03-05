@@ -136,3 +136,15 @@ def empty2dash(value, func=None):
             return value
         return func(value)
     return '-'
+
+
+def clear_cache_on_game_save(obj):
+    cache = caches['league']
+    cache.delete_where('cache_key >= ":1:rating_competitor_list_for_%d_league_%s"' % (
+    obj.league.id, obj.end_datetime.strftime("%Y-%m-%d")))
+    league_prefix = ":1:rating_competitor_list_for_%d_league" % \
+                    obj.league.id
+    where = ("cache_key LIKE '%(league_prefix)s%%' AND "
+             "cache_key >= '%(league_prefix)s_%(datetime)s'" %
+             {'league_prefix': league_prefix,
+              'datetime': obj.end_datetime.strftime("%Y-%m-%d")})

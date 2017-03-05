@@ -12,11 +12,12 @@ from django.utils.translation import ugettext_lazy as _
 
 from modeltranslation.admin import TranslationAdmin
 
-from league.models import (get_current_leagues, League, LeagueSettings, LeagueTournament,
-                           LeagueAlterTournament, LeagueCompetitor, Game, Rating)
-
-from league.forms import GameAdminForm
 from rating.models import Competitor
+
+from .forms import GameAdminForm
+from .models import (get_current_leagues, League, LeagueSettings, LeagueTournament,
+                           LeagueAlterTournament, LeagueCompetitor, Game, Rating)
+from .utils import clear_cache_on_game_save
 
 
 class LeagueCacheClearTranslationAdmin(TranslationAdmin):
@@ -41,14 +42,7 @@ class LeagueSettingsCacheClearTranslationAdmin(TranslationAdmin):
 
 class GameCacheClearAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
-        cache = caches['league']
-        cache.delete_where('cache_key >= ":1:rating_competitor_list_for_%d_league_%s"' % (obj.league.id, obj.end_datetime.strftime("%Y-%m-%d")))
-        league_prefix = ":1:rating_competitor_list_for_%d_league" % \
-                        obj.league.id
-        where = ("cache_key LIKE '%(league_prefix)s%%' AND "
-                "cache_key >= '%(league_prefix)s_%(datetime)s'" %
-                {'league_prefix': league_prefix,
-                 'datetime': obj.end_datetime.strftime("%Y-%m-%d")})
+        clear_cache_on_game_save(obj)
         obj.save()
 
 

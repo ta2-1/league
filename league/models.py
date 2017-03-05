@@ -14,7 +14,8 @@ from rating.utils import get_place_from_rating_list, get_place
 from league.utils import (league_get_N, league_get_DELTA,
                           update_rating_after, get_place_interval)
 from league.utils import (empty2dash, get_league_rating_datetime, statslog,
-                          leaguecompetitor_getfromcache)
+                          leaguecompetitor_getfromcache,
+                          clear_cache_on_game_save)
 
 
 RATING_CHANGE_TYPE = (
@@ -461,11 +462,12 @@ class Game(models.Model):
         return Rating.objects.get(player=self.player1, game=self).delta
 
     def update_rating(self):
-        add_update_rating_job.delay(self)
+        update_rating_job.delay(self)
 
 
 @job
-def add_update_rating_job(game):
+def update_rating_job(game):
+    clear_cache_on_game_save(game)
     lc1 = LeagueCompetitor.objects.get(league=game.league, competitor=game.player1)
     lc2 = LeagueCompetitor.objects.get(league=game.league, competitor=game.player2)
     (r1, r2) = map(lambda x: x.rating(game.end_datetime), (lc1, lc2))
