@@ -446,6 +446,7 @@ class Game(models.Model):
     
     def save(self, *args, **kwargs):
         self.start_datetime = self.end_datetime
+        clear_cache_on_game_save(self)
         super(Game, self).save(*args, **kwargs)
         
         if self.result1 > 0 or self.result2 > 0:
@@ -467,7 +468,6 @@ class Game(models.Model):
 
 @job
 def update_rating_job(game):
-    clear_cache_on_game_save(game)
     lc1 = LeagueCompetitor.objects.get(league=game.league, competitor=game.player1)
     lc2 = LeagueCompetitor.objects.get(league=game.league, competitor=game.player2)
     (r1, r2) = map(lambda x: x.rating(game.end_datetime), (lc1, lc2))
