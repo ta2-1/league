@@ -13,16 +13,20 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
+            'league_id',
+            help='league_id'
+        )
+        parser.add_argument(
             '--month',
             dest='month',
             help='past month for penalties'
         )
         super(Command, self).add_arguments(parser)
 
-    current_league_id = 1010
 
     def handle(self, *args, **options):
-        l = League.objects.get(id=self.current_league_id)
+        league_id = options.get('league_id', None)
+        l = League.objects.get(id=league_id)
         lcc = LeagueCompetitor.objects.filter(league=l)
 
         league_dt = datetime.combine(l.start_date, time()) \
@@ -67,4 +71,3 @@ class Command(BaseCommand):
                            delta=penalty, rating_before=lc.saved_rating(datetime=end_dt))
                 print r
                 r.save()
-

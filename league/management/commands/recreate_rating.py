@@ -12,6 +12,10 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
+            'league_id',
+            help='current_league_id'
+        )
+        parser.add_argument(
             '--end',
             action='store_true',
             dest='is_finished',
@@ -20,7 +24,7 @@ class Command(BaseCommand):
         super(Command, self).add_arguments(parser)
 
     def handle(self, **options):
-        league_id = 1010
+        league_id = options.get('league_id', None)
         first_penalty_month = 3
         is_finished = options.get('is_finished', False)
         league = League.objects.get(id=league_id)
@@ -37,5 +41,4 @@ class Command(BaseCommand):
             game.save()
             print u"%s" % game
         if is_finished:
-            call_command('penalize', '--month=%s' % saved_month)
-
+            call_command('penalize', league_id, '--month=%s' % saved_month)
