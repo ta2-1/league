@@ -4,6 +4,8 @@ from datetime import datetime, timedelta, time
 from django.core.cache import caches
 from django.db import models
 from django.db.models import Q
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
@@ -422,6 +424,7 @@ class LeagueCompetitor(models.Model):
         
         return sorted(res, key=lambda x: x['object'].lastName)
 
+
 class Game(models.Model):
     class Meta:
         verbose_name = u'Игра'
@@ -528,3 +531,14 @@ class Rating(models.Model):
 
     def __unicode__(self):
         return u"%s (%f) - %s" % (self.player.lastName, self.delta, self.datetime)
+
+
+@receiver(pre_delete, sender=LeagueCompetitor)
+def delete_lc_games(**kwargs):
+    instance = kwargs['instance']
+    gg = Game.objects.filter(
+        league=instance.league
+    ).filter(
+        Q(player1=instance.competitor)|Q(player2=instance.competitor)
+    )
+    gg.delete()
