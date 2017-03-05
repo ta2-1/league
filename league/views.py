@@ -83,8 +83,8 @@ class GameSerializer(serializers.HyperlinkedModelSerializer):
         model = Game
         fields = ('id', 'player1', 'player2', 'result1', 'result2', 'end_datetime', 'rating_delta', 'location', 'league')
 
-    player1 = serializers.PrimaryKeyRelatedField(queryset=Competitor.objects.all())
-    player2 = serializers.PrimaryKeyRelatedField(queryset=Competitor.objects.all())
+    player1 = serializers.PrimaryKeyRelatedField(queryset=Competitor.objects.all().order_by('lastName'))
+    player2 = serializers.PrimaryKeyRelatedField(queryset=Competitor.objects.all().order_by('lastName'))
     location = serializers.PrimaryKeyRelatedField(queryset=Location.objects.all())
     league = serializers.PrimaryKeyRelatedField(queryset=League.objects.all())
     end_datetime = serializers.DateTimeField(default_timezone=timezone.get_default_timezone())
