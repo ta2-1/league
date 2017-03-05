@@ -36,7 +36,7 @@ class Command(BaseCommand):
             if month != saved_month:
                 month_number += 1
                 if month_number > first_penalty_month:
-                    call_command('penalize', month=saved_month)
+                    call_command('penalize', league_id, month=saved_month)
                 saved_month = month
             game.save()
             print u"%s" % game
