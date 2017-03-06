@@ -1,12 +1,4 @@
-{% load i18n %}
-
-<div class="hFooter"></div>
-<div id="footer">
-	<ul>
-		<li>©  2011 — {% now "Y" %}</li>
-		<li><strong>{{ site.domain }}</strong></li>
-	</ul>
-    <!--LiveInternet counter--><script type="text/javascript"><!--
+<!--LiveInternet counter--><script type="text/javascript"><!--
 document.write("<a href='http://www.liveinternet.ru/click' "+
 "target=_blank><img src='//counter.yadro.ru/hit?t26.12;r"+
 escape(document.referrer)+((typeof(screen)=="undefined")?"":
@@ -16,4 +8,3 @@ screen.colorDepth:screen.pixelDepth))+";u"+escape(document.URL)+
 "' alt='' title='" + "{% trans 'LiveInternet: показано количество посетителей за сегодня' %}" + "' " +
 "border='0' width='88' height='15'><\/a>")
 //--></script><!--/LiveInternet-->
-</div>

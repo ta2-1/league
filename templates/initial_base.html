@@ -67,7 +67,15 @@
     </div>
     <!-- END Content -->
 
-    {% block footer %}<div id="footer"></div>{% endblock %}
+    {% block footer %}<div class="hFooter"></div>
+<div id="footer">
+	<ul>
+		<li>©  2011 — {% now "Y" %}</li>
+		<li><strong>{{ site.domain }}</strong></li>
+	</ul>
+  {% include "liveinternet.html" %}
+</div>
+{% endblock %}
 </div>
 <!-- END Container -->
     {% block reformal %}{% endblock %}

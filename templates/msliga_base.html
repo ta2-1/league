@@ -89,9 +89,15 @@
     <!-- END Content -->
 
     {% block footer %}
-      <div id="footer">
-        {% include "footer.html" %}
-      </div>
+      <div class="hFooter"></div>
+<div id="footer">
+	<ul>
+		<li>©  2012 — {% now "Y" %}</li>
+		<li><strong>{{ site.domain }}</strong></li>
+	</ul>
+  {% include liveinternet.html %}
+</div>
+
     {% endblock %}
 </div>
 <!-- END Container -->
