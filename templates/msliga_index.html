@@ -15,7 +15,7 @@
   <div class="top-list">
 
 	{% if league.is_ended %}
-    <h3>{{ league.title }}<br/>{% trans "Итоговый рейтинг TOP-16" %}</h3>
+    <h3><a href="{% url "league_rating" league.id %}">{{ league.title }}</a><br/>{% trans "Итоговый рейтинг TOP-16" %}</h3>
     <p class="lm-date">{% trans "Даты проведения:" %} {% trans "c" %} {{league.start_date}} {% trans "по" %} {{league.end_date}}</p>
     {% if league.is_tournament_data_filled %}
     <p class="lm-date">{% trans "Итоговый турнир:" %} {{league.tournament_a_datetime|date:"DATE_FORMAT"}}</p>
@@ -55,7 +55,7 @@
         {% endif %}
 	</table>
     {% else %}
-    <h3>{{ league.title }}<br/>{% trans "TOP-16 в рейтинге" %}</h3>
+    <h3><a href="{% url "league_rating" league.id %}">{{ league.title }}</a><br/>{% trans "TOP-16 в рейтинге" %}</h3>
     <p class="lm-date">{% trans "По состоянию на" %} {{current_rating_datetime}}</p>
 	<table>
 		<theader>
