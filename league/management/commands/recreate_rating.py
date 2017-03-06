@@ -3,6 +3,7 @@
 
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
+from django.utils.timezone import make_naive
 
 from league.models import League, Game, Rating
 
@@ -29,12 +30,10 @@ class Command(BaseCommand):
         is_finished = options.get('is_finished', False)
         league = League.objects.get(id=league_id)
         Rating.objects.filter(league=league).delete()
-        saved_month = "%s-%s" % (league.start_date.year,
-                                 league.start_date.month)
+        saved_month = league.start_date.strftime('%Y-%m')
         month_number = 1
-        gg = Game.objects.filter(league=league).order_by('end_datetime')
-        for game in gg:
-            month = "%s-%s" % (game.end_datetime.year, game.end_datetime.month)
+        for game in Game.objects.filter(league=league).order_by('end_datetime'):
+            month = make_naive(game.end_datetime).strftime('%Y-%m')
             if month != saved_month:
                 month_number += 1
                 if month_number > first_penalty_month:
