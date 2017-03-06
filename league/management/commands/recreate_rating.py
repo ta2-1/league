@@ -29,10 +29,12 @@ class Command(BaseCommand):
         is_finished = options.get('is_finished', False)
         league = League.objects.get(id=league_id)
         Rating.objects.filter(league=league).delete()
-        saved_month = league.start_date.strftime('%Y-%m')
+        saved_month = "%s-%s" % (league.start_date.year,
+                                 league.start_date.month)
         month_number = 1
-        for game in Game.objects.filter(league=league).order_by('end_datetime'):
-            month = game.end_datetime.strftime('%Y-%m')
+        gg = Game.objects.filter(league=league).order_by('end_datetime')
+        for game in gg:
+            month = "%s-%s" % (game.end_datetime.year, game.end_datetime.month)
             if month != saved_month:
                 month_number += 1
                 if month_number > first_penalty_month:
