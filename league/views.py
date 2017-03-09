@@ -433,18 +433,20 @@ def competitor_opponents(request, league_id, competitor_id):
     except:
         dt = None
 
-    ol = list(lc.league.leaguecompetitor_set.exclude(
-        id=lc.id
+    ol = list(Competitor.objects.filter(
+        leaguecompetitor__league=lc.league
+    ).exclude(
+        leaguecompetitor__id=lc.id
     ).order_by(
-        'competitor__lastName',
-        'competitor__firstName'
-    ).values('id', 'competitor__firstName', 'competitor__lastName'))
+        'lastName',
+        'firstName'
+    ).values('id', 'firstName', 'lastName'))
     for x in ol:
         x.update(
             {
                 'name': u"%s %s" % (
-                    x['competitor__lastName'],
-                    x['competitor__firstName'],
+                    x['lastName'],
+                    x['firstName'],
                 )
             }
         )
