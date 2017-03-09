@@ -440,8 +440,8 @@ def competitor_opponents(request, league_id, competitor_id):
         x.update(
             {
                 'name': u"%s %s" % (
+                    x['competitor__lastName'],
                     x['competitor__firstName'],
-                    x['competitor__lastName']
                 )
             }
         )
