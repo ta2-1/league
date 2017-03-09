@@ -435,6 +435,9 @@ def competitor_opponents(request, league_id, competitor_id):
 
     ol = list(lc.league.leaguecompetitor_set.exclude(
         id=lc.id
+    ).order_by(
+        'competitor__lastName',
+        'competitor__firstName'
     ).values('id', 'competitor__firstName', 'competitor__lastName'))
     for x in ol:
         x.update(
