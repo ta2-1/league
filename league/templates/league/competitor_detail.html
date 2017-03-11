@@ -45,7 +45,7 @@
 
 {% block content %}
   <h1>{{object.firstName}} {{object.lastName}}</h1>
-  <div class="tournaments"><a href="{{ kortov_net.domain }}{% url "competitor" object.id %}">{% trans "Статистика участия в турнирах" %}</a></div>
+  <div class="tournaments"><a href="http://{{ kortov_net.domain }}{% url "competitor" object.id %}">{% trans "Статистика участия в турнирах" %}</a></div>
 <div class="tabs">
 	<ul>
 		<li class="selected">
