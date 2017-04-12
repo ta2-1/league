@@ -4,7 +4,7 @@ PROJECT_DIR = os.path.dirname(__file__)
 PROJECT_PATH = os.path.abspath(os.path.dirname(__file__))
 
 # Django settings for squash project.
-DEBUG = True
+DEBUG = False
 DEBUG_TOOLBAR_PATCH_SETTINGS = False
 
 ADMINS = (
@@ -223,6 +223,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+
     ),
 
     'DEFAULT_PERMISSION_CLASSES': (
