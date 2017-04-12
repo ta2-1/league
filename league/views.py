@@ -12,7 +12,7 @@ from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.generic import TemplateView
 
-from rest_framework import serializers, viewsets, generics, permissions, renderers, response
+from rest_framework import serializers, viewsets, response
 from rest_framework.decorators import detail_route
 
 from rating.models import Competitor, Location
