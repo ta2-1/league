@@ -81,7 +81,8 @@ class LocationViewSet(viewsets.ReadOnlyModelViewSet):
 class GameSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Game
-        fields = ('id', 'player1', 'player2', 'result1', 'result2', 'end_datetime', 'rating_delta', 'location', 'league')
+        fields = ('id', 'player1', 'player2', 'result1', 'result2', 'end_datetime',
+                  'rating_delta', 'location', 'league')
 
     player1 = serializers.PrimaryKeyRelatedField(queryset=Competitor.objects.all().order_by('lastName'))
     player2 = serializers.PrimaryKeyRelatedField(queryset=Competitor.objects.all().order_by('lastName'))
