@@ -106,14 +106,14 @@ def flatpage(request, template_name='league/flatpage.html'):
     url = request.path_info
     if not url.startswith('/'):
         url = "/" + url
-        
+
     f = get_object_or_404(FlatPage, url__exact=url, sites__id__exact=settings.SITE_ID)
-    
+
     t = loader.get_template(template_name)
     c = RequestContext(request, {
-        'flatpage': f, 
+        'flatpage': f,
     },)
-    
+
     return HttpResponse(t.render(c))
 
 
@@ -251,7 +251,7 @@ def competitor(request, league_id, competitor_id, template_name):
                                            .get(league__id=league_id, competitor__id=competitor_id)
     except LeagueCompetitor.DoesNotExist:
         raise Http404('No %s matches the given query.' % LeagueCompetitor._meta.object_name)
-    
+
     i = 1
     rr = list(Rating.objects.filter(player__id=competitor_id, league__id=league_id)
                             .select_related('player', 'league', 'game', 'game__player1',
@@ -263,10 +263,10 @@ def competitor(request, league_id, competitor_id, template_name):
         if r.type == 'game' and r.game and not r.game.no_record:
             i += 1
     rr = list(reversed(rr))
-    
+
     # add penalties
     #rr = Rating.objects.filter(player__id=competitor_id, type='game', league__id=league_id).order_by('-datetime')
-    
+
     #games = Game.objects.filter(Q(player1__id=competitor_id)|Q(player2__id=competitor_id), league__id=league_id).order_by('-end_datetime')
     #r_games = map(lambda x: {'game': x, 'delta': leaguecompetitor.get_delta_rating(x)}, games)
     extra_context={'rr': rr, 'leaguecompetitors': leaguecompetitors, 'leaguecompetitor': leaguecompetitor}
@@ -296,7 +296,7 @@ def competitor_leagues(request, competitor_id):
 @never_cache
 def competitor_league_list(request, competitor_id, template_name):
     leaguecompetitors = LeagueCompetitor.objects.filter(competitor__id=competitor_id).order_by('league__start_date')
-    
+
     return DetailView.as_view(
         queryset=Competitor.objects.all(),
         template_name=template_name
@@ -305,11 +305,11 @@ def competitor_league_list(request, competitor_id, template_name):
         pk=competitor_id,
         extra_context={'leaguecompetitors': leaguecompetitors}
     )
-    
+
 @never_cache
 def competitors_vs(request, competitor1_id, competitor2_id, template_name):
     games = Game.objects.filter(Q(player1__id=competitor1_id, player2__id=competitor2_id)|Q(player1__id=competitor2_id, player2__id=competitor1_id), league__visible=True).order_by('-end_datetime')
-    
+
     return DetailView.as_view(
         queryset=Competitor.objects.all(),
         template_name=template_name
@@ -327,23 +327,23 @@ def competitor_rivals(request, competitor_id, template_name):
     games = Game.objects.filter(Q(player1__id=competitor_id)|Q(player2__id=competitor_id))
     games = games.filter(league__visible=True)
     rivals = {}
-    
+
     for g in games:
         if g.player1.id != int(competitor_id):
             wins = 1 if g.result1 > g.result2 else 0
             player = g.player1
         else:
             wins = 1 if g.result2 > g.result1 else 0
-            player = g.player2        
-            
+            player = g.player2
+
         if not rivals.has_key(player.id):
             rivals[player.id] = {'object': player, 'wins': wins, 'games_count': 1}
         else:
             rivals[player.id]['wins'] += wins
             rivals[player.id]['games_count'] += 1
-              
+
     rivals = sorted(map(lambda x: x[1], rivals.items()), key=lambda x: x['object'].lastName)
-        
+
     return DetailView.as_view(
         queryset=Competitor.objects.all(),
         template_name=template_name
@@ -372,7 +372,7 @@ def get_possible_opponents(lc, dt=None):
 
 def get_game_delta(settings, rating1, rating2, result1, result2, min_rival_count):
     n = league_get_N(settings, result1, result2)
-    
+
     return league_get_DELTA(settings, rating1, rating2, n, min_rival_count)
 
 
@@ -402,7 +402,7 @@ def competitor_game_rivals(request, league_id, competitor_id, template_name):
 
     for r in rivals:
         r['results'] = []
-        min_rival_count = min(rival_count, r['lc'].rival_count()) 
+        min_rival_count = min(rival_count, r['lc'].rival_count())
         for res2 in range(3):
             r['results'].append({'res1' : 3, 'res2' : res2, 'delta': get_game_delta(lc.league.settings, lc.rating(), r['live_rating'], 3, res2, min_rival_count)})
         for res1 in reversed(range(3)):
@@ -452,7 +452,7 @@ def competitor_opponents(request, league_id, competitor_id):
         )
 
     json_data = json.dumps({'HTTPRESPONSE':1, 'data': ol}, ensure_ascii=False)
-    
+
     return HttpResponse(json_data, content_type="application/json")
 
 
