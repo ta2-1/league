@@ -446,7 +446,13 @@ class Game(models.Model):
     added_via_api = models.BooleanField(verbose_name=u'Добавлена через API', default=False)
 
     def __unicode__(self):
-        return u"%s - %s (%d : %d) - %s" % (self.player1.lastName, self.player2.lastName, self.result1, self.result2, self.end_datetime)
+        return u"%s - %s (%d : %d) - %s" % (
+            self.player1.lastName,
+            self.player2.lastName,
+            self.result1,
+            self.result2,
+            timezone.localtime(self.end_datetime)
+        )
     
     def save(self, *args, **kwargs):
         self.start_datetime = self.end_datetime

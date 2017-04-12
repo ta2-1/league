@@ -178,6 +178,8 @@ class GameAdmin(GameCacheClearAdmin):
         }),
 
     )
+    list_filter = ('added_via_api', 'league', 'location', 'end_datetime')
+    search_fields = ('player1__lastName', 'player2__lastName',)
     form = GameAdminForm
 
     def __init__(self, *args, **kwargs):
@@ -202,6 +204,8 @@ class GameAdmin(GameCacheClearAdmin):
 
 class RatingAdmin(RatingCacheClearAdmin):
     list_display = ('__unicode__', 'game',)
+    list_filter = ('league', 'game__location', 'datetime')
+    search_fields = ('player__lastName',)
 
 
 admin.site.register(League, LeagueAdmin)
