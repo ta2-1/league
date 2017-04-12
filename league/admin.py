@@ -188,15 +188,25 @@ class GameAdmin(GameCacheClearAdmin):
         return super(GameAdmin, self).__init__(*args, **kwargs)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == 'league':
-            kwargs['initial'] = self.league
+        if db_field.name in ('player1', 'player2') and hasattr(self, 'league'):
+            kwargs["queryset"] = Competitor.objects.filter(
+                leaguecompetitor__league=self.league
+            ).order_by('lastName')
             return db_field.formfield(**kwargs)
-
-        if db_field.name in ('player1','player2'):
-            kwargs["queryset"] = Competitor.objects.filter(leaguecompetitor__league=self.league).order_by('lastName')
-            return db_field.formfield(**kwargs)
-        
         return super(GameAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super(GameAdmin, self).get_form(request, obj, **kwargs)
+
+        if obj is not None:
+            form.base_fields['player1'].queryset = Competitor.objects.filter(id=obj.player1_id).order_by('lastName')
+            form.base_fields['player2'].queryset = Competitor.objects.filter(id=obj.player2_id).order_by('lastName')
+            form.base_fields['player2'].widget.widget.attrs['disabled'] = 'disabled'
+            form.base_fields['player1'].widget.widget.attrs['disabled'] = 'disabled'
+        elif hasattr(self, 'league'):
+            form.base_fields['league'].initial = self.league
+
+        return form
 
     def has_add_permission(self, request):
         return hasattr(self, 'league')
