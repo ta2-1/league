@@ -443,6 +443,7 @@ class Game(models.Model):
     
     league = models.ForeignKey(League, verbose_name=u'Лига')
     no_record = models.BooleanField(verbose_name=u'Незачетная игра', default=False)
+    added_via_api = models.BooleanField(verbose_name=u'Добавлена через API', default=False)
 
     def __unicode__(self):
         return u"%s - %s (%d : %d) - %s" % (self.player1.lastName, self.player2.lastName, self.result1, self.result2, self.end_datetime)

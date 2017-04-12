@@ -89,6 +89,9 @@ class GameSerializer(serializers.HyperlinkedModelSerializer):
     league = serializers.PrimaryKeyRelatedField(queryset=League.objects.all())
     end_datetime = serializers.DateTimeField(default_timezone=timezone.get_default_timezone())
 
+    def save(self, **kwargs):
+        return super(GameSerializer, self).save(added_via_api=True, **kwargs)
+
 
 class GameViewSet(viewsets.mixins.RetrieveModelMixin, viewsets.mixins.CreateModelMixin, viewsets.GenericViewSet):
     queryset = Game.objects.all()
