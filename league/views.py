@@ -70,7 +70,7 @@ class LeagueViewSet(viewsets.ReadOnlyModelViewSet):
 class LocationSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Location
-        fields = ('id', 'title')
+        fields = ('id', 'title', 'address', 'latitude', 'longitude')
 
 
 class LocationViewSet(viewsets.ReadOnlyModelViewSet):
@@ -172,6 +172,7 @@ def get_league_result_context(league):
         'rcl_a': rcl_a,
         'rcl_b': rcl_b,
     }
+
 
 class LeagueDetailView(DetailView):
     model = League
