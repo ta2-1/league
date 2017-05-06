@@ -6,7 +6,10 @@ from dateutil.relativedelta import relativedelta
 
 from django.core.management.base import BaseCommand
 
+from django_rq import job
+
 from league.models import League, LeagueCompetitor, Rating
+
 
 class Command(BaseCommand):
     help = "Penalize competitors who does not play much."
@@ -66,8 +69,18 @@ class Command(BaseCommand):
                 else:
                     penalty = 0
 
-            if penalty < 0 and Rating.objects.filter(type='penalty', datetime=dt, player=lc.competitor).count() == 0:
-                r = Rating(league=l, type='penalty', datetime=dt, player=lc.competitor,
-                           delta=penalty, rating_before=lc.saved_rating(datetime=end_dt))
-                print r
-                r.save()
+            penalty_count = Rating.objects.filter(
+                type='penalty', datetime=dt, player=lc.competitor).count()
+            if penalty < 0 and penalty_count == 0:
+                save_rating.delay(lc, penalty, dt, end_dt)
+
+
+@job
+def save_rating(league_competitor, penalty, dt, end_dt):
+    competitor = league_competitor.competitor
+    league = league_competitor.league
+    saved_rating = league_competitor.saved_rating(datetime=end_dt)
+    r = Rating(league=league, type='penalty', datetime=dt, player=competitor,
+               delta=penalty, rating_before=saved_rating)
+    print r
+    r.save()
