@@ -1,7 +1,7 @@
 from modeltranslation.translator import translator, TranslationOptions
 
 from rating.models import Tournament, Competitor, Rule, Location, Category 
-from league.models import League, LeagueTournament, LeagueAlterTournament, LeagueSettings  
+from league.models import League, LeagueTournament, LeagueTournamentSet, LeagueSettings
 from django.contrib.flatpages.models import FlatPage
 from django.contrib.sites.models import Site
   
@@ -34,7 +34,10 @@ class LeagueTranslationOptions(TranslationOptions):
     fields = ('title', )
 translator.register(League, LeagueTranslationOptions)
 translator.register(LeagueTournament, LeagueTranslationOptions)
-translator.register(LeagueAlterTournament, LeagueTranslationOptions)
+
+class LeagueTournamentSetTranslationOptions(TranslationOptions):
+    fields = ('name', )
+translator.register(LeagueTournamentSet, LeagueTournamentSetTranslationOptions)
 
 class LeagueSettingsTranslationOptions(TranslationOptions):
     fields = ('title', )

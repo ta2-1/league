@@ -1,6 +1,6 @@
 import json
 
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 
 from django.db.models import Q
 from django.shortcuts import redirect, get_object_or_404
@@ -16,10 +16,14 @@ from rest_framework import serializers, viewsets, response
 from rest_framework.decorators import detail_route
 
 from rating.models import Competitor, Location
-from rating.genericviews import DetailedWithExtraContext as DetailView, ListViewWithExtraContext as ListView
+from rating.genericviews import (
+    DetailedWithExtraContext as DetailView,
+    ListViewWithExtraContext as ListView)
 
 from league.models import get_current_leagues, Game, League, LeagueCompetitor, Rating
-from league.utils import league_get_N, league_get_DELTA, get_league_rating_datetime
+from league.utils import (
+    league_get_N, league_get_DELTA, get_league_rating_datetime,
+    get_rating_competitor_list)
 
 
 # Serializers define the API representation.
@@ -157,23 +161,6 @@ def get_league_rating_context(league, dt):
     }
 
 
-def get_league_result_context(league):
-    rcl = league.get_total_rating_competitor_list()
-
-    if league.is_tournament_data_filled:
-        rcl_a = filter(lambda x: x['lc'].tournament_category == 'A', rcl)
-        rcl_b = filter(lambda x: x['lc'].tournament_category == 'B', rcl)
-    else:
-        rcl_a = rcl[:16]
-        rcl_b = rcl[16:]
-
-    return {
-        'league': league,
-        'rcl_a': rcl_a,
-        'rcl_b': rcl_b,
-    }
-
-
 class LeagueDetailView(DetailView):
     model = League
     pk_url_kwarg = 'league_id'
@@ -206,9 +193,6 @@ class LeagueResultsView(LeagueDetailView):
             return super(LeagueResultsView, self).get(request, *args, **kwargs)
         else:
             return redirect('/leagues/%s' % league.id)
-
-    def get_context_data(self, **kwargs):
-        return get_league_result_context(self.get_object())
 
 
 class LeagueGamesView(LeagueDetailView):

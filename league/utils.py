@@ -7,6 +7,8 @@ from django.core.cache import caches
 from django.db.models import Q
 from django.utils import timezone
 
+from rating.utils import get_place, get_place_from_rating_list
+
 
 cache = caches['league']
 
@@ -148,3 +150,30 @@ def clear_cache_on_game_save(obj):
              "cache_key >= '%(league_prefix)s_%(datetime)s'" %
              {'league_prefix': league_prefix,
               'datetime': obj.end_datetime.strftime("%Y-%m-%d")})
+
+
+def get_rating_competitor_list(lcc, rivals_count, date_time):
+
+    rcl = map(lambda x:
+            {
+               'object':x.competitor,
+               'rating':x.saved_rating(date_time),
+               'place': '-',
+               'lc': x,
+               'game_count': x.game_count(date_time),
+               'rival_count': x.rival_count(date_time),
+               'last_game': x.last_game(date_time)
+            }, lcc)
+    rcl = sorted(rcl, key=lambda x: x['rating'], reverse=True)
+
+    rcd = {}
+    for x in rcl:
+        rcd[x['object'].id] = x
+
+    vrcl = filter(lambda x: x['rival_count'] >= rivals_count, rcl)
+
+    for i,x in enumerate(vrcl):
+        place = get_place_from_rating_list(vrcl, i)
+        rcd[x['object'].id]['place'] = place
+
+    return rcl

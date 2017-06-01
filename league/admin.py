@@ -15,8 +15,9 @@ from modeltranslation.admin import TranslationAdmin
 from rating.models import Competitor
 
 from .forms import GameAdminForm
-from .models import (get_current_leagues, League, LeagueSettings, LeagueTournament,
-                           LeagueAlterTournament, LeagueCompetitor, Game, Rating)
+from .models import (League, LeagueSettings, LeagueTournament,
+                     LeagueCompetitor, Game, Rating, LeagueTournamentSet,
+                     LeagueTournamentResult)
 from .utils import clear_cache_on_game_save
 
 
@@ -102,32 +103,7 @@ class LeagueTournamentCompetitorsInline(admin.TabularInline):
         return super(LeagueTournamentCompetitorsInline, self).get_formset(request, obj, **kwargs)
 
 
-class LeagueTournamentACompetitorsInline(LeagueTournamentCompetitorsInline):
-    model = LeagueCompetitor
-
-    def get_queryset(self, request):
-        qs = super(LeagueTournamentCompetitorsInline, self).get_queryset(request)
-        if hasattr(self, 'league') and self.league:
-            rival_count = self.league.settings.final_rival_quantity
-            rcl = self.league.get_rating_competitor_list(datetime.combine(self.league.end_date, time())+timedelta(days=2))
-            qs = qs.filter(competitor__id__in=map(lambda x: x['object'].id, filter(lambda x: x['rival_count']>=rival_count, rcl)[:16]))
-        return qs
-
-
-class LeagueTournamentBCompetitorsInline(LeagueTournamentCompetitorsInline):
-    model = LeagueCompetitor
-
-    def get_queryset(self, request):
-        qs = super(LeagueTournamentBCompetitorsInline, self).get_queryset(request)
-        if hasattr(self, 'league') and self.league:
-            rival_count = self.league.settings.final_rival_quantity
-            rcl = self.league.get_rating_competitor_list(datetime.combine(self.league.end_date, time())+timedelta(days=2))
-            qs = qs.filter(competitor__id__in=map(lambda x: x['object'].id, filter(lambda x: x['rival_count']>=rival_count, rcl)[16:]))
-        return qs
-
-
 class LeagueAdmin(LeagueCacheClearTranslationAdmin):
-    exclude = ('tournament_a_datetime', 'tournament_b_datetime', 'location', 'is_tournament_data_filled')
     inlines = (LeagueCompetitorsInline,)
     list_display = ('title', 'show_add_game_url')
 
@@ -143,28 +119,6 @@ class LeagueAdmin(LeagueCacheClearTranslationAdmin):
 
 class LeagueSettingsAdmin(LeagueSettingsCacheClearTranslationAdmin):
     model = LeagueSettings
-
-
-class LeagueTournamentAdmin(LeagueCacheClearTranslationAdmin):
-    inlines = (LeagueTournamentACompetitorsInline, LeagueTournamentBCompetitorsInline)
-    fields = ('tournament_a_datetime', 'tournament_b_datetime', 'location', 'is_tournament_data_filled')
-    
-    def has_add_permission(self, request):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-
-class LeagueTournamentAlterAdmin(LeagueCacheClearTranslationAdmin):
-    inlines = (LeagueTournamentCompetitorsInline, )
-    fields = ('tournament_a_datetime', 'tournament_b_datetime', 'location', 'is_tournament_data_filled')
-    
-    def has_add_permission(self, request):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
 
 
 class GameAdmin(GameCacheClearAdmin):
@@ -218,10 +172,36 @@ class RatingAdmin(RatingCacheClearAdmin):
     search_fields = ('player__lastName',)
 
 
+class LeagueTournamentResultsInline(admin.TabularInline):
+    model = LeagueTournamentResult
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name in ('competitor'):
+            kwargs["queryset"] = LeagueCompetitor.objects.order_by('competitor__lastName_ru')
+            return db_field.formfield(**kwargs)
+
+
+class LeagueTournamentSetAdmin(LeagueCacheClearTranslationAdmin):
+    inlines = (LeagueTournamentResultsInline,)
+
+
+class LeagueTournamentSetInline(admin.TabularInline):
+    model = LeagueTournamentSet
+
+
+class LeagueTournamentAdmin(LeagueCacheClearTranslationAdmin):
+    inlines = (LeagueTournamentSetInline,)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 admin.site.register(League, LeagueAdmin)
 admin.site.register(LeagueSettings, LeagueSettingsAdmin)
 admin.site.register(LeagueTournament, LeagueTournamentAdmin)
-admin.site.register(LeagueAlterTournament, LeagueTournamentAlterAdmin)
+admin.site.register(LeagueTournamentSet, LeagueTournamentSetAdmin)
 admin.site.register(Game, GameAdmin)
 admin.site.register(Rating, RatingAdmin)
 

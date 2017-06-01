@@ -12,12 +12,12 @@ from django.utils.translation import ugettext_lazy as _
 from django_rq import job
 
 from rating.models import Competitor, Location
-from rating.utils import get_place_from_rating_list, get_place
+from rating.utils import get_place
 from league.utils import (league_get_N, league_get_DELTA,
                           update_rating_after, get_place_interval)
 from league.utils import (empty2dash, get_league_rating_datetime, statslog,
                           leaguecompetitor_getfromcache,
-                          clear_cache_on_game_save)
+                          clear_cache_on_game_save, get_rating_competitor_list)
 
 
 RATING_CHANGE_TYPE = (
@@ -92,25 +92,7 @@ class League(models.Model):
     
     start_date = models.DateField(verbose_name=u'Дата начала')
     end_date = models.DateField(verbose_name=u'Дата окончания')
-    
-    tournament_a_datetime = models.DateTimeField(
-        verbose_name=u'Дата и время турнира (A)',
-        blank=True, null=True
-    )
-    tournament_b_datetime = models.DateTimeField(
-        verbose_name=u'Дата и время турнира (B)',
-        blank=True, null=True
-    )
-    location = models.ForeignKey(
-        Location,
-        verbose_name=u'Место проведения турнира',
-        blank=True, null=True
-    )
-    is_tournament_data_filled = models.BooleanField(
-        verbose_name=u'Данные введены полностью',
-        default=False,
-    )
-    
+
     settings = models.ForeignKey(
         LeagueSettings,
         verbose_name=u'Настройки лиги',
@@ -154,26 +136,10 @@ class League(models.Model):
             dt = timezone.now()
         
         return dt
-                    
-    def get_total_rating_competitor_list(self):
-        league_date = datetime.combine(self.end_date, time())
 
-        rivals_count = self.settings.final_rival_quantity
-    
-        rcl = filter(
-            lambda x: x['rival_count'] >= rivals_count,
-            self.get_rating_competitor_list(league_date + timedelta(days=3))
-        )
-        for i,x in enumerate(rcl):
-            base = i+1 if i <= 15 else i-15
-            if x['tournament_place'] != '-':
-                x['place_delta'] = base - get_place(x['tournament_place'])
-
-        return rcl
-    
     def get_rating_competitor_list(self, date_time=None):
         dt_param = timezone.now() if date_time is None else date_time
-        
+
         rivals_count = self.settings.reliability_rival_quantity
 
         dt = get_league_rating_datetime(dt_param)
@@ -182,38 +148,13 @@ class League(models.Model):
             self.id, dt_str)
         cache = caches['league']
         rcl = cache.get(cache_key)
-        if rcl is None:           
+        if rcl is None:
             lcc = LeagueCompetitor.objects.filter(
                 league__id=self.id
             ).select_related('league', 'competitor')
-            
-            rcl = map(lambda x: 
-                    {
-                       'object':x.competitor, 
-                       'rating':x.saved_rating(dt), 
-                       'place': '-', 
-                       'lc': x,
-                       'tournament_place': empty2dash(x.tournament_place),
-                       'sort_tournament_place': empty2dash(x.tournament_place,
-                                                           get_place),
-                       'game_count': x.game_count(dt), 
-                       'rival_count': x.rival_count(dt),
-                       'last_game': x.last_game(dt)
-                    }, lcc)                     
-            rcl = sorted(rcl, key=lambda x: x['rating'], reverse=True)
-            
-            rcd = {}
-            for x in rcl:
-                rcd[x['object'].id] = x  
-                   
-            vrcl = filter(lambda x: x['rival_count'] >= rivals_count, rcl)
-            
-            for i,x in enumerate(vrcl):
-                place = get_place_from_rating_list(vrcl, i)
-                rcd[x['object'].id]['place'] = place
-           
+            rcl = get_rating_competitor_list(lcc, rivals_count, date_time=dt)
             cache.set(cache_key, rcl, 60 * 60 * 24 * 30 * 6)
-            
+
         return rcl
     
     def is_ended(self):
@@ -248,13 +189,7 @@ class LeagueCompetitor(models.Model):
     league = models.ForeignKey(League, verbose_name=u'Лига')
     paid = models.BooleanField(u'Оплатил', default=False)
     status = models.CharField(u'Статус', max_length=255, blank=True)
-    tournament_place = models.CharField(u'Место', max_length=255, blank=True)
-    is_participant = models.BooleanField(u'Принимал участие в турнире',
-                                         blank=True, default=False)
-    tournament_category = models.CharField(u'Категория турнира', blank=True,
-                                           null=True, choices=TOURNAMENT_CATEGORIES,
-                                           max_length=4)
-    
+
     def __unicode__(self):
         return u"%s: %s %s" % (self.league.title, self.competitor.lastName,
                                self.competitor.firstName)
@@ -549,3 +484,67 @@ def delete_lc_games(**kwargs):
         Q(player1=instance.competitor)|Q(player2=instance.competitor)
     )
     gg.delete()
+
+
+class LeagueTournamentSet(models.Model):
+    class Meta:
+        verbose_name = u'Катерория турнира'
+        verbose_name_plural = u'Категории турнира'
+
+    league = models.ForeignKey('League', verbose_name=_(u"Лига"))
+    name = models.CharField(verbose_name=_(u"Название"), max_length=255)
+    number = models.PositiveSmallIntegerField(verbose_name=_(u"Количество участников"),
+                                              null=True, blank=True)
+    competitors = models.ManyToManyField(
+        'LeagueCompetitor', through='LeagueTournamentResult')
+
+    datetime = models.DateTimeField(
+        verbose_name=u'Дата и время турнира',
+        blank=True, null=True
+    )
+    location = models.ForeignKey(
+        Location,
+        verbose_name=u'Место проведения турнира',
+        blank=True, null=True
+    )
+    is_filled = models.BooleanField(
+        verbose_name=u'Данные введены полностью',
+        default=False,
+    )
+
+    def get_rating_competitor_list(self):
+        league_date = datetime.combine(self.league.end_date, time()) + timedelta(days=3)
+        rivals_count = self.league.settings.final_rival_quantity
+
+        rcl = map(lambda x:
+                  {
+                      'competitor': x.competitor,
+                      'rating': x.saved_rating(league_date),
+                      'tournament_place': empty2dash(x.leaguetournamentresult.place),
+                      'sort_tournament_place': empty2dash(x.leaguetournamentresult.place, get_place),
+                      'lc': x,
+                      'game_count': x.game_count(league_date),
+                      'rival_count': x.rival_count(league_date),
+                      'last_game': x.last_game(league_date)
+                  }, self.competitors)
+        rcl = filter(lambda x: x['rival_count'] >= rivals_count, rcl)
+
+        for i, x in enumerate(rcl):
+            if x['tournament_place'] != '-':
+                x['place_delta'] = i + 1 - get_place(x['tournament_place'])
+
+        return rcl
+
+
+class LeagueTournamentResult(models.Model):
+    competitor = models.ForeignKey('LeagueCompetitor', verbose_name=u'Участник')
+    tournament_set = models.ForeignKey('LeagueTournamentSet', verbose_name=u'Сетка результатов')
+    place = models.CharField(_(u'Место'), max_length=10)
+    is_participant = models.BooleanField(_(u'Принимал участие в турнире'), blank=True, default=False)
+
+    class Meta:
+        verbose_name = _(u'Результат')
+        verbose_name_plural = _(u'Результаты')
+
+    def rplace(self):
+        return get_place(self.place)
