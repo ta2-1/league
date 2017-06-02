@@ -43,7 +43,7 @@
 	</theader>
 	<tbody>
         {% if lts.is_filled %}
-            {% for obj in lts.get_rating_competitor_list|sort:"sort_tournament_place" %}
+            {% for obj in lts.get_rating_competitor_list %}
             <tr {% if forloop.last %}class="last"{% endif%}>
                 <td>{{obj.tournament_place}}</td>
                 <td class="td_name"><a href="{% url "competitor_league" obj.competitor.id lts.league.id %}">{{obj.competitor.lastName}} {{obj.competitor.firstName}}</a></td>
@@ -54,7 +54,7 @@
             </tr>
             {% endfor %}
         {% else %}
-            {% for obj in lts.get_rating_competitor_list|sort:"sort_place" %}
+            {% for obj in lts.get_rating_competitor_list %}
             <tr {% if forloop.last %}class="last"{% endif%}>
                 <td>{{forloop.counter}}</td>
                 <td class="td_name"><a href="{% url "competitor_league" obj.competitor.id lts.league.id %}">{{obj.competitor.lastName}} {{obj.competitor.firstName}}</a></td>

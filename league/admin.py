@@ -15,9 +15,9 @@ from modeltranslation.admin import TranslationAdmin
 from rating.models import Competitor
 
 from .forms import GameAdminForm
-from .models import (League, LeagueSettings, LeagueTournament,
-                     LeagueCompetitor, Game, Rating, LeagueTournamentSet,
-                     LeagueTournamentResult)
+from .models import (
+    League, LeagueSettings, LeagueTournament, LeagueTournamentWithSets,
+    LeagueCompetitor, Game, Rating, LeagueTournamentSet)
 from .utils import clear_cache_on_game_save
 
 
@@ -79,7 +79,7 @@ class LeagueTournamentCompetitorsInline(admin.TabularInline):
     max_num = 0
     can_delete = False
     readonly_fields = ('competitor','saved_rating',)
-    fields = ('competitor', 'saved_rating', 'tournament_place', 'tournament_category', 'is_participant')
+    fields = ('competitor', 'saved_rating', 'tournament_set', 'tournament_place', 'is_participant')
 
     class Media:
         js = (
@@ -87,6 +87,12 @@ class LeagueTournamentCompetitorsInline(admin.TabularInline):
             'league/js/apply_stupidtable.js',
         )
   
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name in ('tournament_set') and hasattr(self, 'league'):
+            kwargs["queryset"] = LeagueTournamentSet.objects.filter(league=self.league)
+            return db_field.formfield(**kwargs)
+        return super(LeagueTournamentCompetitorsInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
+
     def get_queryset(self, request):
         qs = super(LeagueTournamentCompetitorsInline, self).get_queryset(request)
         
@@ -98,9 +104,18 @@ class LeagueTournamentCompetitorsInline(admin.TabularInline):
         return qs
     
     def get_formset(self, request, obj=None, **kwargs):
-        self.league = obj
+        if isinstance(obj, League):
+            self.league = obj
 
         return super(LeagueTournamentCompetitorsInline, self).get_formset(request, obj, **kwargs)
+
+
+class LeagueTournamentSetCompetitorsInline(LeagueTournamentCompetitorsInline):
+    def get_formset(self, request, obj=None, **kwargs):
+        if hasattr(obj, 'league'):
+            self.league = obj.league
+
+        return super(LeagueTournamentSetCompetitorsInline, self).get_formset(request, obj, **kwargs)
 
 
 class LeagueAdmin(LeagueCacheClearTranslationAdmin):
@@ -114,7 +129,7 @@ class LeagueAdmin(LeagueCacheClearTranslationAdmin):
             add='Add Game'
         )
 
-    show_add_game_url.short_description = ""
+    show_add_game_url.short_description = _(u"Добавить игру")
 
 
 class LeagueSettingsAdmin(LeagueSettingsCacheClearTranslationAdmin):
@@ -172,24 +187,37 @@ class RatingAdmin(RatingCacheClearAdmin):
     search_fields = ('player__lastName',)
 
 
-class LeagueTournamentResultsInline(admin.TabularInline):
-    model = LeagueTournamentResult
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name in ('competitor'):
-            kwargs["queryset"] = LeagueCompetitor.objects.order_by('competitor__lastName_ru')
-            return db_field.formfield(**kwargs)
-
-
-class LeagueTournamentSetAdmin(LeagueCacheClearTranslationAdmin):
-    inlines = (LeagueTournamentResultsInline,)
-
-
 class LeagueTournamentSetInline(admin.TabularInline):
     model = LeagueTournamentSet
+    extra = 1
+    fields = ('name_ru', 'name_en', 'number', 'datetime', 'location')
+
+
+class LeagueFilledTournamentSetInline(admin.TabularInline):
+    model = LeagueTournamentSet
+    extra = 0
+    max_num = 0
+    can_delete = False
+    readonly_fields = ('name',)
+    fields = ('name', 'is_filled',)
+
+
+class LeagueTournamentWithSetsAdmin(LeagueCacheClearTranslationAdmin):
+    readonly_fields = ('title',)
+    fields = ('title',)
+    inlines = (LeagueTournamentSetInline, )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 class LeagueTournamentAdmin(LeagueCacheClearTranslationAdmin):
-    inlines = (LeagueTournamentSetInline,)
+    readonly_fields = ('title', )
+    fields = ('title', )
+    inlines = (LeagueFilledTournamentSetInline, LeagueTournamentCompetitorsInline, )
 
     def has_add_permission(self, request):
         return False
@@ -201,7 +229,7 @@ class LeagueTournamentAdmin(LeagueCacheClearTranslationAdmin):
 admin.site.register(League, LeagueAdmin)
 admin.site.register(LeagueSettings, LeagueSettingsAdmin)
 admin.site.register(LeagueTournament, LeagueTournamentAdmin)
-admin.site.register(LeagueTournamentSet, LeagueTournamentSetAdmin)
+admin.site.register(LeagueTournamentWithSets, LeagueTournamentWithSetsAdmin)
 admin.site.register(Game, GameAdmin)
 admin.site.register(Rating, RatingAdmin)
 
@@ -212,12 +240,13 @@ class FlatPageAdmin(TranslationAdmin):
               'tiny_mce/textareas.js',)
     
     form = FlatpageForm
+
     fieldsets = (
         (None, {'fields': ('url', 'title', 'content', 'sites')}),
-        (_('Advanced options'), {'classes': ('collapse',), 'fields': ('enable_comments', 'registration_required', 'template_name')}),
+        #(_('Advanced options'), {'classes': ('collapse',), 'fields': ('enable_comments', 'registration_required', 'template_name')}),
     )
     list_display = ('url', 'title')
-    list_filter = ('sites', 'enable_comments', 'registration_required')
+    list_filter = ('sites', )
     search_fields = ('url', 'title')
 
 

@@ -7,30 +7,27 @@ from django.db import migrations
 
 def copy_data(apps, schema_editor):
     for league in apps.get_model("league.League").objects.all():
-        lts_a = apps.get_model("league.LeagueTournamentSet").objects.create(dict(
-            name=u'Категория A',
+        lts_a = league.leaguetournamentset_set.create(
+            name_ru=u'Категория A',
+            name_en=u'Category A',
             number=16,
             datetime=league.tournament_a_datetime,
             is_filled=league.is_tournament_data_filled,
-        ))
-        lts_b = apps.get_model("league.LeagueTournamentSet").objects.create(dict(
-            name=u'Категория B',
+        )
+        lts_b = league.leaguetournamentset_set.create(
+            name_ru=u'Категория B',
+            name_en=u'Category B',
             datetime=league.tournament_b_datetime,
             is_filled=league.is_tournament_data_filled,
-        ))
+        )
         for lc in league.leaguecompetitor_set.all():
             lts = None
             if lc.tournament_category == 'A':
                 lts = lts_a
             elif lc.tournament_category == 'B':
                 lts = lts_b
-            if lts:
-                apps.get_model("league.LeagueTournamentResult").objects.create(
-                    dict(place=lc.tournament_place,
-                         is_participant=lc.is_participant,
-                         competitor=lc,
-                         tournament_set=lts,
-                         ))
+            lc.tournament_set = lts
+            lc.save()
 
 
 class Migration(migrations.Migration):

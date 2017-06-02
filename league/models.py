@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, timedelta, time
 
+from django.contrib.flatpages.models import FlatPage
 from django.core.cache import caches
 from django.db import models
 from django.db.models import Q
@@ -109,6 +110,16 @@ class League(models.Model):
         verbose_name=u'Отмечать неоплативших',
         default=False,
     )
+    statement = models.ForeignKey(
+        FlatPage,
+        verbose_name=u'Положение лиги',
+        related_name='stated_leagues',
+        null=True)
+    rules = models.ForeignKey(
+        FlatPage,
+        verbose_name=u'Правила расчета рейтинга',
+        related_name='ruled_leagues',
+        null=True)
 
     def __unicode__(self):
         return self.title
@@ -171,13 +182,13 @@ class LeagueTournament(League):
         proxy = True
         verbose_name = u'Итоговый турнир Лиги'
         verbose_name_plural = u'Итоговые турниры Лиги'
- 
 
-class LeagueAlterTournament(League):
+
+class LeagueTournamentWithSets(League):
     class Meta:
         proxy = True
-        verbose_name = u'Итоговый турнир Лиги (2)'
-        verbose_name_plural = u'Итоговые турниры Лиги (2)'
+        verbose_name = u'Итоговый турнир Лиги (Категории)'
+        verbose_name_plural = u'Итоговые турниры Лиги (Категории)'
 
 
 class LeagueCompetitor(models.Model):
@@ -189,6 +200,10 @@ class LeagueCompetitor(models.Model):
     league = models.ForeignKey(League, verbose_name=u'Лига')
     paid = models.BooleanField(u'Оплатил', default=False)
     status = models.CharField(u'Статус', max_length=255, blank=True)
+
+    tournament_set = models.ForeignKey('LeagueTournamentSet', verbose_name=u'Катерория турнира', null=True)
+    tournament_place = models.CharField(_(u'Место'), max_length=255, blank=True)
+    is_participant = models.BooleanField(_(u'Принимал участие в турнире'), blank=True, default=False)
 
     def __unicode__(self):
         return u"%s: %s %s" % (self.league.title, self.competitor.lastName,
@@ -495,8 +510,7 @@ class LeagueTournamentSet(models.Model):
     name = models.CharField(verbose_name=_(u"Название"), max_length=255)
     number = models.PositiveSmallIntegerField(verbose_name=_(u"Количество участников"),
                                               null=True, blank=True)
-    competitors = models.ManyToManyField(
-        'LeagueCompetitor', through='LeagueTournamentResult')
+
 
     datetime = models.DateTimeField(
         verbose_name=u'Дата и время турнира',
@@ -512,6 +526,9 @@ class LeagueTournamentSet(models.Model):
         default=False,
     )
 
+    def __unicode__(self):
+        return "%s (%s)" % (self.name, self.league.title)
+
     def get_rating_competitor_list(self):
         league_date = datetime.combine(self.league.end_date, time()) + timedelta(days=3)
         rivals_count = self.league.settings.final_rival_quantity
@@ -520,31 +537,20 @@ class LeagueTournamentSet(models.Model):
                   {
                       'competitor': x.competitor,
                       'rating': x.saved_rating(league_date),
-                      'tournament_place': empty2dash(x.leaguetournamentresult.place),
-                      'sort_tournament_place': empty2dash(x.leaguetournamentresult.place, get_place),
+                      'tournament_place': empty2dash(x.tournament_place),
+                      'sort_tournament_place': empty2dash(x.tournament_place, get_place),
                       'lc': x,
                       'game_count': x.game_count(league_date),
                       'rival_count': x.rival_count(league_date),
                       'last_game': x.last_game(league_date)
-                  }, self.competitors)
+                  }, self.leaguecompetitor_set.all())
         rcl = filter(lambda x: x['rival_count'] >= rivals_count, rcl)
-
+        rcl = sorted(rcl, key=lambda x: x['rating'], reverse=True)
         for i, x in enumerate(rcl):
             if x['tournament_place'] != '-':
                 x['place_delta'] = i + 1 - get_place(x['tournament_place'])
 
+        if self.is_filled:
+            rcl = sorted(rcl, key=lambda x: x['sort_tournament_place'])
+
         return rcl
-
-
-class LeagueTournamentResult(models.Model):
-    competitor = models.ForeignKey('LeagueCompetitor', verbose_name=u'Участник')
-    tournament_set = models.ForeignKey('LeagueTournamentSet', verbose_name=u'Сетка результатов')
-    place = models.CharField(_(u'Место'), max_length=10)
-    is_participant = models.BooleanField(_(u'Принимал участие в турнире'), blank=True, default=False)
-
-    class Meta:
-        verbose_name = _(u'Результат')
-        verbose_name_plural = _(u'Результаты')
-
-    def rplace(self):
-        return get_place(self.place)

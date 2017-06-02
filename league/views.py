@@ -109,22 +109,6 @@ class GameViewSet(viewsets.mixins.RetrieveModelMixin, viewsets.mixins.CreateMode
             return HttpResponseBadRequest()
 
 
-@never_cache
-def flatpage(request, template_name='league/flatpage.html'):
-    url = request.path_info
-    if not url.startswith('/'):
-        url = "/" + url
-
-    f = get_object_or_404(FlatPage, url__exact=url, sites__id__exact=settings.SITE_ID)
-
-    t = loader.get_template(template_name)
-    c = RequestContext(request, {
-        'flatpage': f,
-    },)
-
-    return HttpResponse(t.render(c))
-
-
 class LeaguesView(TemplateView):
     template_name = 'league/current_leagues.html'
 
@@ -164,6 +148,37 @@ def get_league_rating_context(league, dt):
 class LeagueDetailView(DetailView):
     model = League
     pk_url_kwarg = 'league_id'
+
+
+@never_cache
+def flatpage(request, template_name='league/flatpage.html'):
+    url = request.path_info
+    if not url.startswith('/'):
+        url = "/" + url
+
+    f = get_object_or_404(FlatPage, url__exact=url, sites__id__exact=settings.SITE_ID)
+
+    t = loader.get_template(template_name)
+    c = RequestContext(request, {
+        'flatpage': f,
+    },)
+
+    return HttpResponse(t.render(c))
+
+
+class LeagueStatementView(LeagueDetailView):
+    template_name = 'league/statement.html'
+
+    def get_context_data(self, **kwargs):
+        f = get_object_or_404(FlatPage, id=self.object.statement_id)
+        return {'flatpage': f, 'league': self.object}
+
+
+class LeagueRulesView(LeagueDetailView):
+    template_name = 'league/rules.html'
+    def get_context_data(self, **kwargs):
+        f = get_object_or_404(FlatPage, id=self.object.rules_id)
+        return {'flatpage': f, 'league': self.object}
 
 
 class LeagueRatingView(LeagueDetailView):

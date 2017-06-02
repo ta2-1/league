@@ -15,11 +15,15 @@
     <a href="{% url "league_results" league.id %}">{% trans "Результаты" %}</a>
   </li>
   {% endif %}
-  <li {% if url_name == 'league_statement' %}class="selected" {% endif %}>
-    <a href="{% url "league_statement" %}">{% trans 'Положение лиги' %}</a>
-  </li>
+  {% if league.statement %}
+    <li {% if url_name == 'league_statement' %}class="selected" {% endif %}>
+      <a href="{% url "league_statement" league.id %}">{% trans 'Положение лиги' %}</a>
+    </li>
+  {% endif %}
+  {% if league.rules %}
   <li {% if url_name == 'league_rules' %}class="selected" {% endif %}>
-    <a href="{% url "league_rules" %}">{% trans 'Правила расчета рейтинга' %}</a>
+    <a href="{% url "league_rules" league.id %}">{% trans 'Правила расчета рейтинга' %}</a>
   </li>
+  {% endif %}
 </ul>
 {% endwith %}

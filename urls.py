@@ -52,8 +52,8 @@ urlpatterns = [
     url(r'^leagues/(?P<league_id>\d+)/penalties/$', league_views.LeaguePenaltiesView.as_view(), {}, name='league_penalties'),
     url(r'^leagues/(?P<league_id>\d+)/competitors/(?P<competitor_id>\d+)/gamerivals/$', league_views.competitor_game_rivals, {'template_name': 'league/competitor_game_rivals.html'}, name='competitor_game_rivals'),
 
-    url(r'^leagues/statement/$', league_views.flatpage, name='league_statement'),
-    url(r'^leagues/rules/$', league_views.flatpage, name='league_rules'),
+    url(r'^leagues/(?P<league_id>\d+)/statement/$', league_views.LeagueStatementView.as_view(), {}, name='league_statement'),
+    url(r'^leagues/(?P<league_id>\d+)/rules/$', league_views.LeagueRulesView.as_view(), {}, name='league_rules'),
 
     url(r'^i18n/setlang/', lang_view.set_language),
 
