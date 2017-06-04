@@ -110,11 +110,16 @@ class IndexView(TemplateView):
         }
 
 
-def search(request, template_name=''):
-    t = loader.get_template(template_name)
-    c = RequestContext(request, {},)
-    
-    return HttpResponse(t.render(c))
+class SearchView(TemplateView):
+
+    @property
+    def template_name(self):
+        site = get_current_site(self.request)
+        if site.id == 1:
+            return 'search.html'
+        else:
+            return 'msliga_search.html'
+
 
 @cache_page(60*60*24*7)
 def tournaments(request):

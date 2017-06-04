@@ -22,7 +22,7 @@ router.register(r'games', GameViewSet)
 urlpatterns = [
 
     url(r'^$', rating_views.IndexView.as_view(), {}, name="index"),
-    url(r'^search/$', rating_views.search, {'template_name': 'search.html'}),
+    url(r'^search/$', rating_views.SearchView.as_view(), {}, name="search"),
     url(r'^tournaments/rating/rules/$', rating_views.RulesView.as_view(), {}, name="rules"),
 
     url(r'^tournaments/$', rating_views.tournaments, name="tournaments"),
