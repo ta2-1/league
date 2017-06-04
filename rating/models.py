@@ -88,7 +88,13 @@ class Competitor(models.Model):
                 for i in range(rrt_count, len(r_points_sorted)):
                     r_points_sorted[i] = (r_points_sorted[i][0], r_points_sorted[i][1], False)
 
-                r_points = sorted(r_points_sorted, key=lambda x: x[0].resultset.tournament.start_date)
+                r_points = sorted(
+                    r_points_sorted,
+                    key=lambda x: (
+                        x[0].resultset.tournament.start_date,
+                        x[0].resultset.tournament.id
+                    )
+                )
                 cache.set(cache_key, r_points, 60 * 60 * 24 * 30)
 
         return r_points
