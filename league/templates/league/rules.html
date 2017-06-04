@@ -1,0 +1,19 @@
+{% extends "league/leagues.html" %}
+
+{% block title %}
+{{flatpage.title}} — {{block.super}}
+{% endblock %}
+
+{% load i18n %}
+
+{% block content %}
+  <h1>{{ league.title }}</h1><br/>
+  <p class="lm-date">{% trans "Даты проведения" %}: <span>{{league.start_date}}&nbsp;&dash;&nbsp;{{league.end_date}}</span></p>
+<div class="tabs">
+	{% include "league/league_menu.html" %}
+</div>
+<h1>{{ flatpage.title }}</h1><br/>
+{% autoescape off %}
+{{flatpage.content}}
+{% endautoescape %}
+{% endblock %}
