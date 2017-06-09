@@ -109,7 +109,7 @@
       <span>
         <strong>
         {% if leaguecompetitor.tournament_place %}
-            {{leaguecompetitor.tournament_place}} ({% trans "Категория " %}{{ leaguecompetitor.get_tournament_category }})
+            {{leaguecompetitor.tournament_place}} ({{ leaguecompetitor.tournament_set.name }})
         {% else %}
             -
         {% endif %}

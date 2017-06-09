@@ -208,16 +208,16 @@ INSTALLED_APPS = (
     #'django_extensions',
     #'debug_toolbar',
 
-    #'raven.contrib.django.raven_compat',
+    'raven.contrib.django.raven_compat',
 )
 
-# import raven
-# RAVEN_CONFIG_1 = {
-#    'dsn': 'https://64e514cfdf9e459aa8fec450c3da8baf:598a1680a50047f2a6b7ebdce8d22916@sentry.io/122359',
+import raven
+RAVEN_CONFIG = {
+    'dsn': 'https://64e514cfdf9e459aa8fec450c3da8baf:598a1680a50047f2a6b7ebdce8d22916@sentry.io/122359',
     # If you are using git, you can also automatically configure the
     # release based on the git info.
-#    'release': raven.fetch_git_sha(os.path.dirname(os.pardir)),
-#}
+    'release': raven.fetch_git_sha(os.path.dirname(os.pardir)),
+}
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -318,6 +318,10 @@ LOGGING = {
             'maxBytes': 1024 * 1024 * 5,
             'formatter': 'league',
         },
+        'sentry': {
+            'level': 'ERROR', # To capture more than ERROR, change to WARNING, INFO, etc.
+            'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
+        },
         'league': {
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': os.path.join(PROJECT_PATH, "log/league.log"),
@@ -331,6 +335,10 @@ LOGGING = {
             'backupCount': 5,
             'maxBytes': 1024*1024*5,
             'formatter': 'league',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
         }
     },
     'loggers': {
@@ -341,6 +349,11 @@ LOGGING = {
         'rq.worker': {
             'handlers': ['update_rating'],
             'level': 'DEBUG',
+        },
+        'raven': {
+            'level': 'DEBUG',
+            'handlers': ['console', 'sentry'],
+            'propagate': False,
         },
         #'': {
         #    'handlers': ['all'],
