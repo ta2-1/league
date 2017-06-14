@@ -132,6 +132,20 @@ class LeagueAdmin(LeagueCacheClearTranslationAdmin):
     show_add_game_url.short_description = _(u"Добавить игру")
 
 
+class LeagueCompetitorAdmin(admin.ModelAdmin):
+    list_display = ('competitor', 'league', 'paid')
+    list_filter = ('league', 'paid')
+    search_fields = ('competitor__lastName',)
+
+    def save_model(self, request, obj, form, change):
+        if obj.league.id:
+            cache = caches['league']
+            cache.delete_where('cache_key > ":1:rating_competitor_list_for_%d_league"' % obj.league.id)
+            # cache.delete_where('cache_key LIKE ":1:rating_competitor_list_for_%d_league' % obj.id + '%"')
+
+        obj.save()
+
+
 class LeagueSettingsAdmin(LeagueSettingsCacheClearTranslationAdmin):
     model = LeagueSettings
 
@@ -227,6 +241,7 @@ class LeagueTournamentAdmin(LeagueCacheClearTranslationAdmin):
 
 
 admin.site.register(League, LeagueAdmin)
+admin.site.register(LeagueCompetitor, LeagueCompetitorAdmin)
 admin.site.register(LeagueSettings, LeagueSettingsAdmin)
 admin.site.register(LeagueTournament, LeagueTournamentAdmin)
 admin.site.register(LeagueTournamentWithSets, LeagueTournamentWithSetsAdmin)

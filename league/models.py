@@ -201,7 +201,7 @@ class LeagueCompetitor(models.Model):
     paid = models.BooleanField(u'Оплатил', default=False)
     status = models.CharField(u'Статус', max_length=255, blank=True)
 
-    tournament_set = models.ForeignKey('LeagueTournamentSet', verbose_name=u'Катерория турнира', null=True)
+    tournament_set = models.ForeignKey('LeagueTournamentSet', verbose_name=u'Катерория турнира', null=True, blank=True)
     tournament_place = models.CharField(_(u'Место'), max_length=255, blank=True)
     is_participant = models.BooleanField(_(u'Принимал участие в турнире'), blank=True, default=False)
 
