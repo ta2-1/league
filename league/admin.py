@@ -63,14 +63,32 @@ class RatingCacheClearAdmin(admin.ModelAdmin):
 
 class LeagueCompetitorsInline(admin.TabularInline):
     model = LeagueCompetitor
+    readonly_fields = ('competitor', )
     fields = ('competitor', 'status', 'paid')
+    extra = 0
+
+    def has_add_permission(self, request):
+        return False
+
+    def get_queryset(self, request):
+        queryset = super(LeagueCompetitorsInline, self).get_queryset(request)
+        return queryset.order_by('competitor__lastName_ru')
+
+
+class LeagueCompetitorsInlineAdd(admin.TabularInline):
+    model = LeagueCompetitor
+    fields = ('competitor', 'status', 'paid')
+    extra = 0
+
+    def has_change_permission(self, request, obj=None):
+            return False
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name in ('competitor'):
             kwargs["queryset"] = Competitor.objects.order_by('lastName_ru')
             return db_field.formfield(**kwargs)
-        
-        return super(LeagueCompetitorsInline, self).formfield_for_foreignkey(db_field, request, **kwargs)
+
+        return super(LeagueCompetitorsInlineAdd, self).formfield_for_foreignkey(db_field, request, **kwargs)
     
 
 class LeagueTournamentCompetitorsInline(admin.TabularInline):
@@ -119,7 +137,7 @@ class LeagueTournamentSetCompetitorsInline(LeagueTournamentCompetitorsInline):
 
 
 class LeagueAdmin(LeagueCacheClearTranslationAdmin):
-    inlines = (LeagueCompetitorsInline,)
+    inlines = (LeagueCompetitorsInline, LeagueCompetitorsInlineAdd)
     list_display = ('title', 'show_add_game_url')
 
     def show_add_game_url(self, obj):
@@ -136,6 +154,13 @@ class LeagueCompetitorAdmin(admin.ModelAdmin):
     list_display = ('competitor', 'league', 'paid')
     list_filter = ('league', 'paid')
     search_fields = ('competitor__lastName',)
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name in ('competitor'):
+            kwargs["queryset"] = Competitor.objects.order_by('lastName_ru')
+            return db_field.formfield(**kwargs)
+
+        return super(LeagueCompetitorAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
     def save_model(self, request, obj, form, change):
         if obj.league.id:
