@@ -195,7 +195,8 @@ class LeagueCompetitor(models.Model):
     class Meta:
         verbose_name = u'Участник лиги'
         verbose_name_plural = u'Участники лиги'
-        
+        unique_together = ('competitor', 'league')
+
     competitor = models.ForeignKey(Competitor, verbose_name=u'Участник')
     league = models.ForeignKey(League, verbose_name=u'Лига')
     paid = models.BooleanField(u'Оплатил', default=False)
