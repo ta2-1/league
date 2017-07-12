@@ -15,8 +15,6 @@
 </div>
 </div>
 
-{% block sponsors %}{{ block.super }}{% endblock %}
-
 <div style="clear:both"/>
 {% for lts in object.leaguetournamentset_set.all %}
 <h3 class="results-title">
@@ -66,6 +64,8 @@
         {% endif %}
 </tbody>
 </table>
+
+  {% include "partners/list.html" %}
 {% endfor %}
 
 {% endblock %}
