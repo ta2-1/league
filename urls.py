@@ -1,5 +1,7 @@
 from django.conf import settings
 from django.conf.urls import include, url
+from django.conf.urls.static import static
+from django.contrib.flatpages.views import flatpage
 
 import lang_view
 from rating import views as rating_views
@@ -57,6 +59,7 @@ urlpatterns = [
 
     url(r'^i18n/setlang/', lang_view.set_language),
 
+    url(r'^contacts/$', flatpage, {'url': '/contacts/'}, name='contacts'),
 
     #API not for MENU
     url(r'^leagues/(?P<league_id>\d+)/competitors/(?P<competitor_id>\d+)/opponents/$', league_views.competitor_opponents, name='competitor_opponents'),
@@ -67,11 +70,14 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
 
     url(r'^rosetta/', include('rosetta.urls')),
+
     #url(r'^admin_tools/', include('admin_tools.urls')),
 
     url(r'^api/v0/', include(router.urls)),
     url(r'^api/', include('rest_framework.urls', namespace='rest_framework')),
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
     import debug_toolbar

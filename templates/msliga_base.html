@@ -39,6 +39,9 @@
     		<li {% if request.path_info|resolved_url_name|is_in:"league_list" %}class="selected" {% endif %}>
           <a href="{% url "league_list" %}">{% trans 'Все лиги' %}</a>
     		</li>
+        <li {% if request.path_info|resolved_url_name|is_in:"contacts" %}class="selected" {% endif %}>
+          <a href="{% url "contacts" %}">{% trans 'Контакты' %}</a>
+        </li>
     	</ul>
       {% block search %}
         <div
