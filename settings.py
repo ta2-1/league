@@ -118,6 +118,7 @@ TEMPLATES = [
                 "rating.context_processors.current_rating_datetime",
                 "rating.context_processors.kortov_net",
                 "rating.context_processors.msliga",
+                "rating.context_processors.partners",
             ],
             'loaders': [
                 'django.template.loaders.filesystem.Loader',
@@ -192,6 +193,7 @@ INSTALLED_APPS = (
     'analytics',
     'rating',
     'league',
+    'partners',
 
 
     #'rosetta',

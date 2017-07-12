@@ -3,9 +3,9 @@ from modeltranslation.translator import translator, TranslationOptions
 from rating.models import Tournament, Competitor, Rule, Location, Category 
 from league.models import (League, LeagueTournament, LeagueTournamentWithSets,
                            LeagueTournamentSet, LeagueSettings)
-from django.contrib.flatpages.models import FlatPage
-from django.contrib.sites.models import Site
-  
+from partners.models import Partner
+
+
 class SiteTranslationOptions(TranslationOptions):
     fields = ('name', )
 translator.register(Site, SiteTranslationOptions)
@@ -49,3 +49,7 @@ class FlatPageTranslationOptions(TranslationOptions):
     fields = ('title', 'content', )
 translator.register(FlatPage, FlatPageTranslationOptions)
     
+
+class PartnerTranslationOptions(TranslationOptions):
+    fields = ('name', 'label', )
+translator.register(Partner, PartnerTranslationOptions)

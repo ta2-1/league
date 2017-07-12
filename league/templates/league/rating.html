@@ -15,7 +15,6 @@
 </div>
 </div>
 
-{% block sponsors %}{{ block.super }}{% endblock %}
 <div style="clear:both">
 {% if league.is_ended %}
     <!--div class="rating-date-info">
@@ -54,5 +53,5 @@
 	</tbody>
 </table>
 </div>
-
+{% include "partners/list.html" %}
 {% endblock %}

@@ -1,0 +1,11 @@
+<div style="float:left">
+  {% for partner in partners %}
+    <div style="margin-left: 50px; margin-bottom: 1em;">
+      <p>{{ partner.label }}</p>
+      <a href="{{ partner.url }}" rel="nofollow">
+        <img src="{{ partner.logo.url }}">
+      </a>
+    </div>
+  {% endfor %}
+</div>
+
