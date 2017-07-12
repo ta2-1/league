@@ -1,11 +1,3 @@
-from django.conf import settings
-from rating.models import Tournament, Competitor, ResultSet, Category, Results, Rule, CategorySettings
-
-from league.models import get_current_leagues
-
-from django.template import loader, RequestContext
-from django.http import HttpResponse
-
 from django.core.urlresolvers import reverse
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib.sites.shortcuts import get_current_site
@@ -15,6 +7,10 @@ from django.views.generic import TemplateView
 
 from utils import get_place, get_place_delta, get_place_from_list, get_points_by_params
 from genericviews import DetailedWithExtraContext as DetailView, ListViewWithExtraContext as ListView
+
+from league.models import get_current_leagues
+from rating.models import (Tournament, Competitor, ResultSet,
+                           Category, Results, Rule, CategorySettings)
 
 
 def get_evaled_r_place(place, rmc_count, tc_count):
@@ -84,7 +80,7 @@ class IndexView(TemplateView):
             ll = get_current_leagues()
             for l in ll:
                 if l.visible:
-                    item = {'league': l}
+                    item = dict(league=l)
                     item['top'] = l.get_rating_competitor_list()[:16]
                     current_leagues.append(item)
         except:

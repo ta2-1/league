@@ -1,6 +1,9 @@
+from django.contrib.flatpages.models import FlatPage
+from django.contrib.sites.models import Site
+
 from modeltranslation.translator import translator, TranslationOptions
 
-from rating.models import Tournament, Competitor, Rule, Location, Category 
+from rating.models import Tournament, Competitor, Rule, Location, Category
 from league.models import (League, LeagueTournament, LeagueTournamentWithSets,
                            LeagueTournamentSet, LeagueSettings)
 from partners.models import Partner
