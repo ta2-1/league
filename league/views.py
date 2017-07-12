@@ -214,14 +214,19 @@ class LeagueGamesView(LeagueDetailView):
     template_name = 'league/games.html'
 
     def get_context_data(self, **kwargs):
-        games = Game.objects.filter(league=self.get_object()) \
-                            .select_related('location', 'player1', 'player2', 'league') \
-                            .order_by('-end_datetime')
+        games = (
+            Game.objects.filter(league=self.get_object())
+                        .select_related('location', 'player1',
+                                        'player2', 'league')
+                        .order_by('-end_datetime'))
         num = 0
         for game in games:
             if not game.no_record:
                 num += 1
                 game.number = num
+        for game in games:
+            if hasattr(game, 'number'):
+                game.number = num - game.number + 1
 
         return {
             'league': self.get_object(),
