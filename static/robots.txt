@@ -1,0 +1,4 @@
+Disallow: /leagues/*/competitors
+Disallow: /competitors/*/leagues
+Disallow: /competitors/*/vs
+Disallow: /competitors/*/rivals
