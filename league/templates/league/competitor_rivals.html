@@ -3,6 +3,9 @@
 
 {% block head-title %} {{object.firstName }} {{object.lastName }} — {{block.super}} {% endblock %}
 
+{% block blockbots %}
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
 
 {% block title %}
 {{object.firstName }} {{object.lastName }} — {% trans "Соперники" %} — {{block.super}}

@@ -6,6 +6,9 @@
 {{object.firstName }} {{object.lastName }} {% trans "vs." %} {{ opponent.firstName }} {{ opponent.lastName }} — {{block.super}}
 {% endblock %}
 
+{% block blockbots %}
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
 
 {% block content %}
 <h1>

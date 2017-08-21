@@ -6,6 +6,9 @@
 {% trans "Игры" %} — {{league.title}} — {{site.name}}
 {% endblock %}
 
+{% block blockbots %}
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
 
 {% block content %}
 <h1>{{league.title}}</h1>

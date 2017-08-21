@@ -2,6 +2,10 @@
 
 {% load i18n rating_tags %}
 
+{% block blockbots %}
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
+
 {% block title %}
 {% trans "Результаты поиска" %} — {{block.super}}
 {% endblock %}
