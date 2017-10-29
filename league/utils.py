@@ -48,10 +48,17 @@ def leaguecompetitor_getfromcache(function):
         last_game = instance.last_game(date_time)
         if last_game is None:
             date = instance.league.start_date
+            last_game_id = 0
         else:
             date = last_game.end_datetime
-        date =  date.strftime("%Y-%m-%d")
-        key = '%s:%s:%s' % (instance.id, function.__name__, date)
+            last_game_id = last_game.id
+        date = date.strftime("%Y-%m-%d")
+        key = '%s:%s:%s:%s' % (
+            instance.id,
+            function.__name__,
+            date,
+            last_game_id
+        )
        
         result = cache.get(key)
         if result is None:

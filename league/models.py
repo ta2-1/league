@@ -359,7 +359,7 @@ class LeagueCompetitor(models.Model):
             Q(league=self.league, end_datetime__lte=dt) & (
                 Q(player1=self.competitor) | Q(player2=self.competitor)
             )
-        ).order_by('-end_datetime')[:1]
+        ).order_by('-end_datetime', '-id')[:1]
         
         if gg:
             return gg[0]
