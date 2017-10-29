@@ -62,17 +62,17 @@ class LeagueSettings(models.Model):
     final_rival_quantity = models.PositiveIntegerField(
         verbose_name=u'Необходимое количество соперников для присвоения '
                      u'итогового места',
-        default = 10,
+        default=10,
     )
     n_formula = models.CharField(
         max_length=255,
         verbose_name=u'Формула N',
-        default = 'result1 - result2',
+        default='result1 - result2',
     )
     delta_formula = models.CharField(
         max_length=255,
         verbose_name=u'Формула DELTA',
-        default = 'N + (r2-r1)/SOFTEN_COEF',
+        default='N + (r2-r1)/SOFTEN_COEF',
     )
 
     def __unicode__(self):
