@@ -137,6 +137,7 @@ def league_list(request, template_name):
 
 
 def get_league_rating_context(league, dt):
+    dt = dt - timedelta(days=1)
     rcl = league.get_rating_competitor_list(dt)
     return {
         'league': league,
