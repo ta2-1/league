@@ -103,7 +103,7 @@
 	<div id="params">
       <div class="current-state">
 	  {% if not leaguecompetitor.league.is_ended %}
-      <p><span class="rating-date-info">{% trans "По состоянию на" %} {{current_rating_datetime}}</span><p>
+      <p><span class="rating-date-info">{% trans "По состоянию на" %} {{ leaguecompetitor.league.current_rating_datetime }}</span><p>
 	  {% else %}
       <p><span>{% trans "Итоговое место" %}: </span>
       <span>
@@ -146,7 +146,11 @@
 				
 				<td><strong>{{obj.game.result1}}:{{obj.game.result2}}</strong></td>
 				{% autoescape off %}
-				<td><strong>{{obj.delta|floatformat:2|show_floatformat_sign}}</strong></td>
+				<td>
+					{% if leaguecompetitor.league.current_rating_datetime > obj.game.end_datetime %}
+					<strong>{{obj.delta|floatformat:2|show_floatformat_sign}}</strong>
+					{% endif %}
+				</td>
 				{% endautoescape %}
 				<td><strong>{{obj.game.end_datetime}}</strong></td>
             {% else %}

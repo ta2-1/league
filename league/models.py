@@ -74,6 +74,11 @@ class LeagueSettings(models.Model):
         verbose_name=u'Формула DELTA',
         default='N + (r2-r1)/SOFTEN_COEF',
     )
+    rating_off_last_days = models.PositiveIntegerField(
+        verbose_name=u'Количество последних дней лиги, когда результаты '
+                     u'накапливаются, но рейтинг не обновляется',
+        default=4,
+    )
 
     def __unicode__(self):
         return u"%s" % self.title
@@ -108,6 +113,10 @@ class League(models.Model):
     )
     mark_unpaid_competitors = models.BooleanField(
         verbose_name=u'Отмечать неоплативших',
+        default=False,
+    )
+    show_last_days_results =  models.BooleanField(
+        verbose_name=u'Показывать расчет рейтинга за последние дни',
         default=False,
     )
     statement = models.ForeignKey(
@@ -174,7 +183,35 @@ class League(models.Model):
             timezone.now().replace(hour=0, minute=0, second=0)
         ) - timedelta(days=2)
     
-        return dt >= league_date
+        return dt >= league_date and self.show_last_days_results
+
+    def get_rating_off_dt(self):
+        rating_off_dt = datetime.combine(
+            self.end_date,
+            time=time()
+        ) - timedelta(
+            days=self.settings.rating_off_last_days - 1
+        )
+        tz = timezone.get_default_timezone()
+        rating_off_dt = timezone.make_aware(rating_off_dt, tz)
+
+        return rating_off_dt
+
+    @property
+    def current_rating_datetime(self):
+        dt = timezone.now()
+        end_datetime = datetime.combine(
+            self.end_date,
+            time=time()
+        ) + timedelta(days=1)
+        tz = timezone.get_default_timezone()
+        end_datetime = timezone.make_aware(end_datetime, tz)
+        if dt > end_datetime:
+            dt = end_datetime
+        rating_off_dt = self.get_rating_off_dt()
+        if dt > rating_off_dt and not self.show_last_days_results:
+            dt = rating_off_dt
+        return dt
 
 
 class LeagueTournament(League):
@@ -210,11 +247,15 @@ class LeagueCompetitor(models.Model):
         return u"%s: %s %s" % (self.league.title, self.competitor.lastName,
                                self.competitor.firstName)
 
-    def rating(self, datetime=timezone.now()):
+    def rating(self, dt=timezone.now()):
+        rating_off_dt = self.league.get_rating_off_dt()
+        if dt > rating_off_dt and not self.league.show_last_days_results:
+            dt = rating_off_dt
+
         rr = Rating.objects.filter(
             league=self.league,
             player=self.competitor,
-            datetime__lt=datetime
+            datetime__lt=dt
         ).order_by('datetime')
 
         res = self.league.settings.initial_rating

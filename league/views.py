@@ -190,13 +190,15 @@ class LeagueRatingView(LeagueDetailView):
                 date = datetime.strptime(self.request.GET['date'], '%d.%m.%Y')
 
                 dt = date.replace(hour=0, minute=0, second=0)
-                # TODO timezone makeaware
+                dt = timezone.make_aware(dt, timezone.get_default_timezone())
             else:
                 dt = timezone.now()
         except:
             dt = timezone.now()
 
-        return get_league_rating_context(self.get_object(), dt)
+        league = self.get_object()
+
+        return get_league_rating_context(league, league.current_rating_datetime)
 
 
 class LeagueResultsView(LeagueDetailView):

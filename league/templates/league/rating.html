@@ -22,11 +22,7 @@
     </div-->
 {% else %}
     <div class="rating-date-info">{% trans "По состоянию на" %}
-    {% if league_rating_datetime %}
-        {{league_rating_datetime}}
-    {% else %}
-        {{current_rating_datetime}}
-    {% endif %}
+    {{ league.current_rating_datetime }}
     </div>
 {% endif %}
 

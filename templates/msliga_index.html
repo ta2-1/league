@@ -62,7 +62,7 @@
 	</table>
     {% else %}
     <h3><a href="{% url "league_rating" league.id %}">{{ league.title }}</a><br/>{% trans "TOP-16 в рейтинге" %}</h3>
-    <p class="lm-date">{% trans "По состоянию на" %} {{current_rating_datetime}}</p>
+    <p class="lm-date">{% trans "По состоянию на" %} {{ league.current_rating_datetime }}</p>
 	<table>
 		<theader>
 			<th>№</th>

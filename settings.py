@@ -115,7 +115,6 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
 
                 "rating.context_processors.site",
-                "rating.context_processors.current_rating_datetime",
                 "rating.context_processors.kortov_net",
                 "rating.context_processors.msliga",
                 "rating.context_processors.partners",
