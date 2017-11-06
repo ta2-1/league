@@ -164,7 +164,7 @@ def get_rating_competitor_list(lcc, rivals_count, date_time):
     rcl = map(lambda x:
             {
                'object':x.competitor,
-               'rating':x.saved_rating(date_time),
+               'rating':x.rating(date_time),
                'place': '-',
                'lc': x,
                'game_count': x.game_count(date_time),

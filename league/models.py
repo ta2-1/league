@@ -583,7 +583,7 @@ class LeagueTournamentSet(models.Model):
         rcl = map(lambda x:
                   {
                       'competitor': x.competitor,
-                      'rating': x.saved_rating(league_date),
+                      'rating': x.rating(league_date),
                       'tournament_place': empty2dash(x.tournament_place),
                       'sort_tournament_place': empty2dash(x.tournament_place, get_place),
                       'lc': x,
