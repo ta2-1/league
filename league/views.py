@@ -282,15 +282,11 @@ def competitor_rivals(request, competitor_id, template_name):
 def get_possible_opponents(lc, dt=None):
     if dt is None:
         dt = get_league_rating_datetime(timezone.now())
-    o1 = lc.get_possible_opponents(dt)
-    o2 = lc.get_possible_opponents(dt - timedelta(days=1))
+    opponents = lc.get_possible_opponents(dt)
 
     d = {}
-    for x in o1:
+    for x in opponents:
         d[x['object'].id] = x
-    for x in o2:
-        if not d.has_key(x['object'].id):
-            d[x['object'].id] = x
 
     return sorted(d.values(), key=lambda x: x['object'].lastName)
 
