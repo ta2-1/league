@@ -11,7 +11,7 @@ from django.contrib import admin
 
 from rest_framework import routers
 
-from league.views import GameViewSet, LeagueViewSet, LocationViewSet
+from league.viewsets import GameViewSet, LeagueViewSet, LocationViewSet
 
 admin.autodiscover()
 
