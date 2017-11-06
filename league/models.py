@@ -254,8 +254,10 @@ class LeagueCompetitor(models.Model):
 
         rr = Rating.objects.filter(
             league=self.league,
-            player=self.competitor,
-            datetime__lt=dt
+            player=self.competitor
+        ).filter(
+            Q(type='penalty', datetime__lte=dt)|
+            Q(datetime__lt=dt)
         ).order_by('datetime')
 
         res = self.league.settings.initial_rating
@@ -266,8 +268,11 @@ class LeagueCompetitor(models.Model):
     
     def saved_rating(self, datetime=timezone.now()):
         rr = Rating.objects.filter(
-            league=self.league, player=self.competitor,
-            datetime__lt=datetime
+            league=self.league,
+            player=self.competitor
+        ).filter(
+            Q(type='penalty', datetime__lte=datetime)
+            | Q(datetime__lt=datetime)
         ).order_by('-datetime')[:1]
 
         res = self.league.settings.initial_rating
