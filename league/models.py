@@ -578,6 +578,8 @@ class LeagueTournamentSet(models.Model):
 
     def get_rating_competitor_list(self):
         league_date = datetime.combine(self.league.end_date, time()) + timedelta(days=3)
+        tz = timezone.get_default_timezone()
+        league_date = timezone.make_aware(league_date, tz)
         rivals_count = self.league.settings.final_rival_quantity
 
         rcl = map(lambda x:

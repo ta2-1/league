@@ -8,6 +8,7 @@ from django.contrib.flatpages.admin import FlatpageForm
 from django.core.cache import caches
 from django.core.urlresolvers import reverse
 from django.utils.html import format_html
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from modeltranslation.admin import TranslationAdmin
@@ -116,7 +117,10 @@ class LeagueTournamentCompetitorsInline(admin.TabularInline):
         
         if hasattr(self, 'league') and self.league:
             rival_count = self.league.settings.final_rival_quantity
-            rcl = self.league.get_rating_competitor_list(datetime.combine(self.league.end_date, time())+timedelta(days=2))
+            dt = datetime.combine(self.league.end_date, time())+timedelta(days=2)
+            tz = timezone.get_default_timezone()
+            dt = timezone.make_aware(dt, tz)
+            rcl = self.league.get_rating_competitor_list(dt)
             qs = qs.filter(competitor__id__in=map(lambda x: x['object'].id, filter(lambda x: x['rival_count']>=rival_count, rcl)))
 
         return qs
