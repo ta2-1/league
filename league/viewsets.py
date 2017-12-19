@@ -6,7 +6,7 @@ from rest_framework.decorators import detail_route
 
 from rating.models import Competitor, Location
 
-from league.models import League, Game
+from league.models import League, Game, get_current_leagues
 
 
 # Serializers define the API representation.
