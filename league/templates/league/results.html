@@ -19,9 +19,9 @@
 {% for lts in object.leaguetournamentset_set.all %}
 <h3 class="results-title">
 	{% if lts.is_filled %}
-    {% blocktrans %} Результаты итогового турнира ({{ lts.name }}) {% endblocktrans %}
+    {% blocktrans with lts_name=lts.name %} Результаты итогового турнира ({{ lts_name }}) {% endblocktrans %}
     {% else %}
-    {% blocktrans %} Участники итогового турнира ({{ lts.name }}) {% endblocktrans %}
+    {% blocktrans with lts_name=lts.name %} Участники итогового турнира ({{ lts_name }}) {% endblocktrans %}
     {% endif %}
 </h3>
 <table>
