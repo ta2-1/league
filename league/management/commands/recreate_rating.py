@@ -26,18 +26,21 @@ class Command(BaseCommand):
 
     def handle(self, **options):
         league_id = options.get('league_id', None)
-        first_penalty_month = 3
+        first_penalty_month = 10 #3
         is_finished = options.get('is_finished', False)
         league = League.objects.get(id=league_id)
         Rating.objects.filter(league=league).delete()
         saved_month = league.start_date.strftime('%Y-%m')
         month_number = 1
-        for game in Game.objects.filter(league=league).order_by('end_datetime'):
+        for game in Game.objects.filter(league=league).order_by('end_datetime', 'id'):
             month = make_naive(game.end_datetime).strftime('%Y-%m')
             if month != saved_month:
+                debug_condition = True
                 month_number += 1
-                if month_number > first_penalty_month:
-                    call_command('penalize', league_id, month=saved_month)
+                if month_number > first_penalty_month + 1:
+                    if debug_condition:
+                        import pdb; pdb.set_trace()
+                        call_command('penalize', league_id, month=saved_month)
                 saved_month = month
             game.save()
             print u"%s" % game
