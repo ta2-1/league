@@ -17,4 +17,4 @@ def msliga(request):
 
 
 def partners(request):
-    return {'partners': Partner.objects.all()}
+    return {'partners': Partner.objects.filter(is_active=True)}
