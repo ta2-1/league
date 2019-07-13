@@ -33,10 +33,14 @@ class LeaguesView(TemplateView):
         for l in ll:
             if not l.visible:
                 continue
-            if not l.is_ended() or not l.is_tournament_data_filled:
+            if not l.is_ended():
+                # is_tournament_data_filled is lost :(
+                # or not l.is_tournament_data_filled
                 ctx['leagues'].append(get_league_rating_context(l, dt))
             else:
-                ctx['leagues'].append(get_league_result_context(l))
+                ctx['leagues'].append(get_league_rating_context(l, dt))
+                # get_league_result_context is lost :(
+                # ctx['leagues'].append(get_league_result_context(l))
 
         return ctx
 

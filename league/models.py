@@ -12,6 +12,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from django_rq import job
 
+from phonenumber_field.modelfields import PhoneNumberField
+
 from rating.models import Competitor, Location
 from rating.utils import get_place
 from league.utils import (league_get_N, league_get_DELTA,
@@ -32,6 +34,40 @@ TOURNAMENT_CATEGORIES = [('A', _(u'Категория А')), ('B', _(u'Кате�
 
 def get_current_leagues():
     return list(League.objects.filter(is_current=True))
+
+
+class LeagueGroup(models.Model):
+    class Meta:
+        verbose_name = u'Группа лиг'
+        verbose_name_plural = u'Группы лиг'
+
+    title = models.CharField(
+        max_length=255,
+        verbose_name=u'Наименование',
+    )
+    slug = models.CharField(u'Код', max_length=25)
+
+    statement = models.ForeignKey(
+        FlatPage,
+        verbose_name=u'Положение лиги',
+        related_name='stated_league_group',
+        null=True)
+    rules = models.ForeignKey(
+        FlatPage,
+        verbose_name=u'Правила расчета рейтинга',
+        related_name='ruled_league_group',
+        null=True)
+    visible = models.BooleanField(
+        verbose_name=u'Отображать на сайте',
+        default=True,
+    )
+    is_current = models.BooleanField(
+        verbose_name=u'Текущая',
+        default=False,
+    )
+
+    def __unicode__(self):
+        return u"%s" % self.title
 
 
 class LeagueSettings(models.Model):
@@ -95,7 +131,9 @@ class League(models.Model):
         through='LeagueCompetitor',
         related_name='leagues'
     )
-    
+    division = models.IntegerField(u'Номер дивизиона', null=True)
+    group = models.ForeignKey(LeagueGroup, null=True)
+
     start_date = models.DateField(verbose_name=u'Дата начала')
     end_date = models.DateField(verbose_name=u'Дата окончания')
 
@@ -238,7 +276,7 @@ class LeagueCompetitor(models.Model):
     league = models.ForeignKey(League, verbose_name=u'Лига')
     paid = models.BooleanField(u'Оплатил', default=False)
     status = models.CharField(u'Статус', max_length=255, blank=True)
-
+    phone = PhoneNumberField(u'Телефон', blank=True, null=True)
     tournament_set = models.ForeignKey('LeagueTournamentSet', verbose_name=u'Катерория турнира', null=True, blank=True)
     tournament_place = models.CharField(_(u'Место'), max_length=255, blank=True)
     is_participant = models.BooleanField(_(u'Принимал участие в турнире'), blank=True, default=False)
@@ -246,6 +284,12 @@ class LeagueCompetitor(models.Model):
     def __unicode__(self):
         return u"%s: %s %s" % (self.league.title, self.competitor.lastName,
                                self.competitor.firstName)
+
+    def first_name(self):
+        return self.competitor.firstName
+
+    def last_name(self):
+        return self.competitor.lastName
 
     def rating(self, dt=timezone.now()):
         rating_off_dt = self.league.get_rating_off_dt()
@@ -432,7 +476,8 @@ class Game(models.Model):
     
     start_datetime = models.DateTimeField(verbose_name=u'Дата и время начала', blank=True)
     end_datetime = models.DateTimeField(verbose_name=u'Дата и время окончания')
-    
+    creation_datetime = models.DateTimeField(verbose_name=u'Дата создания', auto_now_add=True, null=True)
+
     location = models.ForeignKey(Location, verbose_name=u'Место проведения') 
     
     result1 = models.SmallIntegerField(u'Счёт')

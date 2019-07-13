@@ -6,23 +6,7 @@ from rest_framework.decorators import detail_route
 
 from rating.models import Competitor, Location
 
-from league.models import League, Game, get_current_leagues
-
-
-# Serializers define the API representation.
-class UserSerializer(serializers.HyperlinkedModelSerializer):
-
-    class Meta:
-        #model = User
-        fields = ('url', 'id', 'username', 'name', 'phone', 'email',
-                  'balance', 'booked', 'multiplier', 'price_level',
-                  'default_price_level')
-
-    @property
-    def data(self):
-        if hasattr(self, '_data'):
-            del self._data
-        return super(UserSerializer, self).data
+from league.models import LeagueGroup, League, LeagueCompetitor, Game, get_current_leagues
 
 
 class LeagueSerializer(serializers.HyperlinkedModelSerializer):
@@ -31,10 +15,22 @@ class LeagueSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('id', 'title', 'start_date', 'end_date')
 
 
-class LeagueCompetitorSerializer(serializers.HyperlinkedModelSerializer):
+class LeagueGroupSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = LeagueGroup
+        fields = ('id', 'title', 'slug')
+
+
+class CompetitorSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Competitor
         fields = ('id', 'first_name', 'last_name')
+
+
+class LeagueCompetitorSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = LeagueCompetitor
+        fields = ('id', 'competitor_id', 'first_name', 'last_name', 'league_id')
 
 
 class LeagueViewSet(viewsets.ReadOnlyModelViewSet):
@@ -51,7 +47,19 @@ class LeagueViewSet(viewsets.ReadOnlyModelViewSet):
         league = self.get_object()
         competitors = Competitor.objects.filter(leaguecompetitor__league=league)
 
-        return response.Response(LeagueCompetitorSerializer(competitors, many=True).data)
+        return response.Response(CompetitorSerializer(competitors, many=True).data)
+
+
+class CompetitorViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Competitor.objects.all()
+    serializer_class = CompetitorSerializer
+
+    @detail_route()
+    def league(self, request, *args, **kwargs):
+        competitor = self.get_object()
+        league = League.objects.get(leaguecompetitor__competitor=competitor, is_current=True, group__is_current=True)
+
+        return response.Response(LeagueSerializer(league).data)
 
 
 class LocationSerializer(serializers.HyperlinkedModelSerializer):
@@ -90,3 +98,27 @@ class GameViewSet(viewsets.mixins.RetrieveModelMixin, viewsets.mixins.CreateMode
             return super(GameViewSet, self).create(request, *args, **kwargs)
         except:
             return HttpResponseBadRequest()
+
+
+class LeagueGroupViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = LeagueGroup.objects.all()
+    serializer_class = LeagueGroupSerializer
+
+    def get_queryset(self):
+        queryset = LeagueGroup.objects.all()
+
+        return queryset
+
+    @detail_route()
+    def players(self, request, *args, **kwargs):
+        group = self.get_object()
+        league_competitors = LeagueCompetitor.objects.filter(league__group=group)
+
+        return response.Response(LeagueCompetitorSerializer(league_competitors, many=True).data)
+
+    @detail_route()
+    def leagues(self, request, *args, **kwargs):
+        group = self.get_object()
+        leagues = League.objects.filter(league__group=group)
+
+        return response.Response(LeagueSerializer(leagues, many=True).data)

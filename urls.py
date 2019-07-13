@@ -11,15 +11,17 @@ from django.contrib import admin
 
 from rest_framework import routers
 
-from league.viewsets import GameViewSet, LeagueViewSet, LocationViewSet
+from league.viewsets import (GameViewSet, LeagueViewSet, LocationViewSet, LeagueGroupViewSet, CompetitorViewSet)
 
 admin.autodiscover()
 
 # Routers provide an easy way of automatically determining the URL conf.
 router = routers.DefaultRouter()
 router.register(r'leagues', LeagueViewSet)
+router.register(r'groups', LeagueGroupViewSet)
 router.register(r'locations', LocationViewSet)
 router.register(r'games', GameViewSet)
+router.register(r'players', CompetitorViewSet)
 
 urlpatterns = [
 

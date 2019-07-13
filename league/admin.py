@@ -18,7 +18,7 @@ from rating.models import Competitor
 from .forms import GameAdminForm
 from .models import (
     League, LeagueSettings, LeagueTournament, LeagueTournamentWithSets,
-    LeagueCompetitor, Game, Rating, LeagueTournamentSet)
+    LeagueCompetitor, Game, Rating, LeagueTournamentSet, LeagueGroup)
 from .utils import clear_cache_on_game_save
 
 
@@ -65,7 +65,7 @@ class RatingCacheClearAdmin(admin.ModelAdmin):
 class LeagueCompetitorsInline(admin.TabularInline):
     model = LeagueCompetitor
     readonly_fields = ('competitor', )
-    fields = ('competitor', 'status', 'paid')
+    fields = ('competitor', 'status', 'paid', 'phone')
     extra = 0
 
     def has_add_permission(self, request):
@@ -78,7 +78,7 @@ class LeagueCompetitorsInline(admin.TabularInline):
 
 class LeagueCompetitorsInlineAdd(admin.TabularInline):
     model = LeagueCompetitor
-    fields = ('competitor', 'status', 'paid')
+    fields = ('competitor', 'status', 'paid', 'phone')
     extra = 0
 
     def has_change_permission(self, request, obj=None):
@@ -230,6 +230,9 @@ class RatingAdmin(RatingCacheClearAdmin):
     search_fields = ('player__lastName',)
 
 
+class LeagueGroupAdmin(admin.ModelAdmin):
+    model = LeagueGroup
+
 class LeagueTournamentSetInline(admin.TabularInline):
     model = LeagueTournamentSet
     extra = 1
@@ -270,6 +273,7 @@ class LeagueTournamentAdmin(LeagueCacheClearTranslationAdmin):
 
 
 admin.site.register(League, LeagueAdmin)
+admin.site.register(LeagueGroup, LeagueGroupAdmin)
 admin.site.register(LeagueCompetitor, LeagueCompetitorAdmin)
 admin.site.register(LeagueSettings, LeagueSettingsAdmin)
 admin.site.register(LeagueTournament, LeagueTournamentAdmin)
