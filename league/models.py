@@ -109,7 +109,7 @@ class LeagueSettings(models.Model):
     delta_formula = models.CharField(
         max_length=255,
         verbose_name=u'Формула DELTA',
-        default='N + (r2-r1)/SOFTEN_COEF',
+        default='N + (r2-r1)/(SOFTEN_COEF-TRUST_DELTA)',
     )
     rating_off_last_days = models.PositiveIntegerField(
         verbose_name=u'Количество последних дней лиги, когда результаты '
