@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, time
 
 from django.contrib.flatpages.models import FlatPage
 from django.core.cache import caches
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 from django.db.models.signals import pre_delete
@@ -495,10 +496,18 @@ class Game(models.Model):
             self.result2,
             timezone.localtime(self.end_datetime)
         )
-    
+
+    def clean(self):
+        player1_is_winner = self.result1 in [2, 3] and self.result2 < self.result1
+        player2_is_winner = self.result2 in [2, 3] and self.result1 < self.result2
+        if not (player1_is_winner or player2_is_winner) and self.result1 >= 0 and self.result2 >= 0:
+            raise ValidationError(
+                {'result1': 'Game final score is incorrect.', 'result2': 'Game final score is incorrect.'})
+
     def save(self, *args, **kwargs):
         self.start_datetime = self.end_datetime
-        clear_cache_on_game_save(self)
+        self.full_clean()
+
         super(Game, self).save(*args, **kwargs)
         
         if self.result1 > 0 or self.result2 > 0:

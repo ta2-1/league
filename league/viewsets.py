@@ -3,6 +3,7 @@ from django.utils import timezone
 
 from rest_framework import serializers, viewsets, response
 from rest_framework.decorators import detail_route
+from rest_framework.exceptions import ValidationError
 
 from rating.models import Competitor, Location
 
@@ -88,6 +89,11 @@ class GameSerializer(serializers.HyperlinkedModelSerializer):
     def save(self, **kwargs):
         return super(GameSerializer, self).save(added_via_api=True, **kwargs)
 
+    def validate_end_datetime(self, value):
+        if timezone.now().date() != value.date():
+            raise serializers.ValidationError("You can add games for today only.")
+        return value
+
 
 class GameViewSet(viewsets.mixins.RetrieveModelMixin, viewsets.mixins.CreateModelMixin, viewsets.GenericViewSet):
     queryset = Game.objects.all()
@@ -96,8 +102,8 @@ class GameViewSet(viewsets.mixins.RetrieveModelMixin, viewsets.mixins.CreateMode
     def create(self, request, *args, **kwargs):
         try:
             return super(GameViewSet, self).create(request, *args, **kwargs)
-        except:
-            return HttpResponseBadRequest()
+        except Exception as e:
+            return HttpResponseBadRequest(e)
 
 
 class LeagueGroupViewSet(viewsets.ReadOnlyModelViewSet):
