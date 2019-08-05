@@ -521,10 +521,15 @@ class Game(models.Model):
     def save(self, *args, **kwargs):
         self.start_datetime = self.end_datetime
         self.full_clean()
+        need_update_rating = False
+        if kwargs.has_key('update_rating'):
+            need_update_rating = kwargs['update_rating']
+            del kwargs['update_rating']
 
         super(Game, self).save(*args, **kwargs)
         
-        if self.result1 > 0 or self.result2 > 0:
+        if (self.result1 > 0 or self.result2 > 0) and need_update_rating:
+            clear_cache_on_game_save(self)
             self.update_rating()
             
     def get_player_result(self, player):
@@ -538,10 +543,11 @@ class Game(models.Model):
         return Rating.objects.get(player=self.player1, game=self).delta
 
     def update_rating(self):
-        update_rating_job.delay(self)
+        #update_rating_job.delay(self)
+        update_rating_job(self)
 
 
-@job
+#@job
 def update_rating_job(game):
     lc1 = LeagueCompetitor.objects.get(league=game.league, competitor=game.player1)
     lc2 = LeagueCompetitor.objects.get(league=game.league, competitor=game.player2)
