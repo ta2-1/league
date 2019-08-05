@@ -73,15 +73,20 @@ def league_get_N(settings, result1, result2):
     except:
         return result1 - result2
     
-def league_get_DELTA(settings, r1, r2, N, min_rival_count=0):
+def league_get_DELTA(settings, r1, r2, N, min_rival_count=0, between_count=0, is_max_of_3=False):
     SOFTEN_COEF = settings.soften_coef
     TRUST_COEF = 0.25 + 0.05*min_rival_count
     TRUST_DELTA = min_rival_count if min_rival_count < 15 else 15
 
     try:
-        return eval(settings.delta_formula)
+        delta = eval(settings.delta_formula)
     except:
-        return TRUST_COEF*(N + (r2-r1)/(SOFTEN_COEF-TRUST_DELTA))
+        delta = TRUST_COEF*(N + (r2-r1)/(SOFTEN_COEF-TRUST_DELTA))
+
+    if is_max_of_3:
+        delta = delta * 0.75
+
+    return (1.0/pow(2, between_count))*delta
     
 def get_new_delta(settings, rating1, rating2):
     game = rating1.game

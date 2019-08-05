@@ -362,7 +362,7 @@ class LeagueCompetitor(models.Model):
         gg = Game.objects.filter(
             Q(
                 league=self.league,
-                end_datetime__lte=dt,
+                end_datetime__lt=dt,
                 no_record=False
             ) & (
                 Q(player1=self.competitor) | Q(player2=self.competitor)
@@ -378,6 +378,20 @@ class LeagueCompetitor(models.Model):
             rivals[player.id] = player
 
         return len(rivals.keys())
+
+    def game_count_with(self, rival, date_time=None):
+        dt = timezone.now() if date_time is None else date_time
+
+        gg = Game.objects.filter(
+            Q(
+                league=self.league,
+                end_datetime__lt=dt,
+                no_record=False
+            ) & (
+                Q(player1=self.competitor, player2=rival) | Q(player2=self.competitor, player1=rival)
+            )
+        )
+        return gg.count()
 
     # for games where no_record is false
     def rivals(self, from_date_time=None, to_date_time=None):
@@ -543,8 +557,10 @@ def update_rating_job(game):
         cache.delete('%s:%s:%s' % (lc2.id, 'game_count', date))
 
         min_rival_count = min(lc1.rival_count(game.start_datetime), lc2.rival_count(game.start_datetime))
+        between_count = lc1.game_count_with(lc2.competitor, game.start_datetime)
         n = league_get_N(game.league.settings, game.result1, game.result2)
-        delta = league_get_DELTA(game.league.settings, r1, r2, n, min_rival_count)
+        is_max_of_3 = max([game.result1, game.result2]) == 2
+        delta = league_get_DELTA(game.league.settings, r1, r2, n, min_rival_count, between_count, is_max_of_3)
 
     if Rating.objects.filter(league=game.league, game=game).count() == 0:
         rating1 = Rating(league=game.league, type='game', game=game, datetime=game.end_datetime, player=game.player1,
