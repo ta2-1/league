@@ -362,8 +362,9 @@ class LeagueCompetitor(models.Model):
         gg = Game.objects.filter(
             Q(
                 league=self.league,
-                end_datetime__lt=dt,
-                no_record=False
+                end_datetime__lte=dt,
+                no_record=False,
+                rating__isnull=False
             ) & (
                 Q(player1=self.competitor) | Q(player2=self.competitor)
             )
@@ -385,8 +386,9 @@ class LeagueCompetitor(models.Model):
         gg = Game.objects.filter(
             Q(
                 league=self.league,
-                end_datetime__lt=dt,
-                no_record=False
+                end_datetime__lte=dt,
+                no_record=False,
+                rating__isnull=False
             ) & (
                 Q(player1=self.competitor, player2=rival) | Q(player2=self.competitor, player1=rival)
             )
