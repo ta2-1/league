@@ -21,7 +21,8 @@ from league.utils import (league_get_N, league_get_DELTA,
                           update_rating_after, get_place_interval)
 from league.utils import (empty2dash, get_league_rating_datetime, statslog,
                           leaguecompetitor_getfromcache,
-                          clear_cache_on_game_save, get_rating_competitor_list)
+                          clear_cache_on_game_save, get_rating_competitor_list,
+                          get_month_interval)
 
 
 RATING_CHANGE_TYPE = (
@@ -395,6 +396,31 @@ class LeagueCompetitor(models.Model):
         )
         return gg.count()
 
+    def rival_count_in_month(self, date_time=None):
+        dt = timezone.now() if date_time is None else date_time
+        start_dt, end_dt = get_month_interval(dt)
+        gg = Game.objects.filter(
+            Q(
+                league=self.league,
+                end_datetime__gte=start_dt,
+                end_datetime__lte=end_dt,
+                no_record=False,
+                rating__isnull=False
+            ) & (
+                Q(player1=self.competitor) | Q(player2=self.competitor)
+            )
+        )
+
+        rivals = {}
+        for g in gg:
+            if g.player1 != self.competitor:
+                player = g.player1
+            else:
+                player = g.player2
+            rivals[player.id] = player
+
+        return len(rivals.keys())
+
     # for games where no_record is false
     def rivals(self, from_date_time=None, to_date_time=None):
         filter_by = {'league': self.league, 'no_record': False}
@@ -564,7 +590,8 @@ def update_rating_job(game):
         cache.delete('%s:%s:%s' % (lc1.id, 'game_count', date))
         cache.delete('%s:%s:%s' % (lc2.id, 'game_count', date))
 
-        min_rival_count = min(lc1.rival_count(game.start_datetime), lc2.rival_count(game.start_datetime))
+        min_rival_count = min(lc1.rival_count_in_month(game.start_datetime),
+                              lc2.rival_count_in_month(game.start_datetime))
         between_count = lc1.game_count_with(lc2.competitor, game.start_datetime)
         n = league_get_N(game.league.settings, game.result1, game.result2)
         is_max_of_3 = max([game.result1, game.result2]) == 2

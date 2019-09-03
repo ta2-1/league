@@ -13,6 +13,15 @@ from rating.utils import get_place, get_place_from_rating_list
 cache = caches['league']
 
 
+def get_month_interval(dt):
+    local_time = timezone.localtime(dt)
+    current_month_start = local_time.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    next_month_datetime = current_month_start + timedelta(days=32)
+    current_month_end = next_month_datetime.replace(day=1) - timedelta(seconds=1)
+
+    return current_month_start, current_month_end
+
+
 def statslog(function):
     @wraps(function)
     def _statslog(instance, *args, **kwargs):
@@ -87,7 +96,8 @@ def league_get_DELTA(settings, r1, r2, N, min_rival_count=0, between_count=0, is
         delta = delta * 0.75
 
     return (1.0/pow(2, between_count))*delta
-    
+
+
 def get_new_delta(settings, rating1, rating2):
     game = rating1.game
     if game.no_record:
@@ -102,7 +112,8 @@ def get_new_delta(settings, rating1, rating2):
         n = league_get_N(settings, result1, result2)
      
         return league_get_DELTA(settings, rating1.rating_before, rating2.rating_before, n, min_rival_count)
-    
+
+
 @statslog_func
 def update_rating_after(rating):
     from league.models import Rating
@@ -173,7 +184,7 @@ def get_rating_competitor_list(lcc, rivals_count, date_time):
                'place': '-',
                'lc': x,
                'game_count': x.game_count(date_time),
-               'rival_count': x.rival_count(date_time),
+               'rival_count': x.rival_count_in_month(date_time),
                'last_game': x.last_game(date_time)
             }, lcc)
     rcl = sorted(rcl, key=lambda x: x['rating'], reverse=True)

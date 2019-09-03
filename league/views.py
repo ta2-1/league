@@ -312,7 +312,7 @@ def get_element_rating(rcl, x):
 @never_cache
 def competitor_game_rivals(request, league_id, competitor_id, template_name):
     lc = get_object_or_404(LeagueCompetitor, league__id=league_id, competitor__id=competitor_id)
-    rival_count = lc.rival_count()
+    rival_count = lc.rival_count_in_month()
     # get live rating for actual deltas
     live_rcl = lc.league.get_rating_competitor_list(timezone.now()+timedelta(days=2))
     dt = timezone.now().replace(hour=0, minute=0, second=0)
@@ -327,7 +327,7 @@ def competitor_game_rivals(request, league_id, competitor_id, template_name):
 
     for r in rivals:
         r['results'] = []
-        min_rival_count = min(rival_count, r['lc'].rival_count())
+        min_rival_count = min(rival_count, r['lc'].rival_count_in_month())
         for res2 in range(3):
             r['results'].append({'res1' : 3, 'res2' : res2, 'delta': get_game_delta(lc.league.settings, lc.rating(), r['live_rating'], 3, res2, min_rival_count)})
         for res1 in reversed(range(3)):
