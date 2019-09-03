@@ -268,6 +268,11 @@ class LeagueTournamentWithSets(League):
         verbose_name_plural = u'Итоговые турниры Лиги (Категории)'
 
 
+class LeagueCompetitorManager(models.Manager):
+    def get_queryset(self):
+        return super(LeagueCompetitorManager, self).get_queryset().filter(is_moved=False)
+
+
 class LeagueCompetitor(models.Model):
     class Meta:
         verbose_name = u'Участник лиги'
@@ -282,6 +287,9 @@ class LeagueCompetitor(models.Model):
     tournament_set = models.ForeignKey('LeagueTournamentSet', verbose_name=u'Катерория турнира', null=True, blank=True)
     tournament_place = models.CharField(_(u'Место'), max_length=255, blank=True)
     is_participant = models.BooleanField(_(u'Принимал участие в турнире'), blank=True, default=False)
+    is_moved = models.BooleanField(_(u'Перемещен в другую лигу'), blank=True, default=False)
+
+    objects = LeagueCompetitorManager()
 
     def __unicode__(self):
         return u"%s: %s %s" % (self.league.title, self.competitor.lastName,
