@@ -563,9 +563,9 @@ class Game(models.Model):
             del kwargs['update_rating']
 
         super(Game, self).save(*args, **kwargs)
-        
+        clear_cache_on_game_save(self)
+
         if (self.result1 > 0 or self.result2 > 0) and need_update_rating:
-            clear_cache_on_game_save(self)
             self.update_rating()
             
     def get_player_result(self, player):

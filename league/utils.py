@@ -193,7 +193,7 @@ def get_rating_competitor_list(lcc, rivals_count, date_time):
     for x in rcl:
         rcd[x['object'].id] = x
 
-    vrcl = filter(lambda x: x['rival_count'] >= rivals_count, rcl)
+    vrcl = filter(lambda x: x['rival_count'] >= rivals_count or rivals_count == 0, rcl)
 
     for i,x in enumerate(vrcl):
         place = get_place_from_rating_list(vrcl, i)
