@@ -3,7 +3,7 @@
 
 from django.core.management.base import BaseCommand
 
-from league.models import Game
+from league.models import Game, LeagueCompetitor
 
 
 class Command(BaseCommand):
@@ -21,5 +21,10 @@ class Command(BaseCommand):
         for game in Game.objects.filter(
                 league__group_id=league_group_id,
                 rating__isnull=True).order_by('end_datetime', 'id'):
-            game.save(update_rating=True)
+            lc1 = LeagueCompetitor.objects.get(league=game.league, competitor=game.player1)
+            lc2 = LeagueCompetitor.objects.get(league=game.league, competitor=game.player2)
             print u"%s" % game
+            print u"Соперники: %s, %s" % (
+                lc1.rival_count_in_month(game.start_datetime),
+                lc2.rival_count_in_month(game.start_datetime))
+            game.save(update_rating=True)

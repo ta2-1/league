@@ -84,7 +84,7 @@
 			</td-->
 			<td>{{obj.league.start_date}}</td>
 			<td>{{obj.league.end_date}}</td>
-			<td>{{obj.rival_count_in_month}}</td>
+			<td>{{obj.rival_count}}</td>
 			<td>{{obj.game_count}}</td>
             <td>{{obj.league.leaguecompetitor_set.count}}</td>
 			<td>{{obj.league.valid_games.count}}</td>
@@ -120,7 +120,7 @@
       <p><span>{% trans "Рейтинг" %}: </span><span><strong>{{leaguecompetitor.rating|floatformat:2}}</strong></span></p>
 	  <p><span>{% trans "Место в рейтинге" %}: </span><span><strong>{{leaguecompetitor.place}}</strong></span></p>
 	  <p><span>{% trans "Количество сыгранных игр" %}: </span><span><strong>{{leaguecompetitor.game_count}}</strong></span></p>
-	  <p><span>{% trans "Количество соперников" %}: </span><span><strong>{{leaguecompetitor.rival_count_in_month}}</strong></span></p>
+	  <p><span>{% trans "Количество соперников в текущем месяце" %}: </span><span><strong>{{leaguecompetitor.rival_count_in_month}}</strong></span></p>
     <p><a href="{% url "competitor_game_rivals" leaguecompetitor.league.id object.id %}">{% trans "Выбор соперника" %}</a></p>
 	    </div>
 	</div>
@@ -154,7 +154,7 @@
 				{% endautoescape %}
 				<td><strong>{{obj.game.end_datetime}}</strong></td>
             {% else %}
-                <td colspan="5">{% trans "Правило 2-х новых соперников в месяц" %}</td>
+                <td colspan="5">{% trans "Изменение рейтинга" %}</td>
                 {% autoescape off %}
 				<td><strong>{{obj.delta|floatformat:2|show_floatformat_sign}}</strong></td>
 				{% endautoescape %}

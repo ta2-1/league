@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 from django.db.models.signals import pre_delete
+from django.db import transaction
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
@@ -155,10 +156,6 @@ class League(models.Model):
         verbose_name=u'Отмечать неоплативших',
         default=False,
     )
-    show_last_days_results =  models.BooleanField(
-        verbose_name=u'Показывать расчет рейтинга за последние дни',
-        default=False,
-    )
     statement = models.ForeignKey(
         FlatPage,
         verbose_name=u'Положение лиги',
@@ -223,7 +220,7 @@ class League(models.Model):
             timezone.now().replace(hour=0, minute=0, second=0)
         ) - timedelta(days=2)
     
-        return dt >= league_date and self.show_last_days_results
+        return dt >= league_date
 
     def get_rating_off_dt(self):
         rating_off_dt = datetime.combine(
@@ -239,19 +236,9 @@ class League(models.Model):
 
     @property
     def current_rating_datetime(self):
-        dt = timezone.now()
-        end_datetime = datetime.combine(
-            self.end_date,
-            time=time()
-        ) + timedelta(days=1)
-        tz = timezone.get_default_timezone()
-        end_datetime = timezone.make_aware(end_datetime, tz)
-        if dt > end_datetime:
-            dt = end_datetime
-        rating_off_dt = self.get_rating_off_dt()
-        if dt > rating_off_dt and not self.show_last_days_results:
-            dt = rating_off_dt
-        return dt
+        dt = timezone.now() - timedelta(days=1)
+
+        return dt.replace(hour=0, minute=0, second=0, microsecond=0)
 
 
 class LeagueTournament(League):
@@ -273,6 +260,11 @@ class LeagueCompetitorManager(models.Manager):
         return super(LeagueCompetitorManager, self).get_queryset().filter(is_moved=False)
 
 
+class LeagueCompetitorWithMovedManager(models.Manager):
+    def get_queryset(self):
+        return super(LeagueCompetitorWithMovedManager, self).get_queryset()
+
+
 class LeagueCompetitor(models.Model):
     class Meta:
         verbose_name = u'Участник лиги'
@@ -290,6 +282,7 @@ class LeagueCompetitor(models.Model):
     is_moved = models.BooleanField(_(u'Перемещен в другую лигу'), blank=True, default=False)
 
     objects = LeagueCompetitorManager()
+    objects_with_moved = LeagueCompetitorWithMovedManager()
 
     def __unicode__(self):
         return u"%s: %s %s" % (self.league.title, self.competitor.lastName,
@@ -716,3 +709,33 @@ class LeagueTournamentSet(models.Model):
             rcl = sorted(rcl, key=lambda x: x['sort_tournament_place'])
 
         return rcl
+
+
+class LeagueCompetitorLeagueChange(models.Model):
+    class Meta:
+        verbose_name = u'Перемещение между дивизионами'
+        verbose_name_plural = u'Перемещения между дивизионами'
+
+    old_league = models.ForeignKey(League, verbose_name=u"Лига (старая)", related_name='old_league_changes')
+    new_league = models.ForeignKey(League, verbose_name=u"Лига (новая)", related_name='new_league_changes')
+    competitor = models.ForeignKey(Competitor, verbose_name=u"Участник")
+    new_rating = models.FloatField(verbose_name=u"Рейтинг в новой лиге")
+    created = models.DateTimeField(verbose_name=u"Дата создания", auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        #with transaction.atomic():
+        super(LeagueCompetitorLeagueChange, self).save(*args, **kwargs)
+        old_lc = LeagueCompetitor.objects.get(league=self.old_league, competitor=self.competitor)
+        new_lc, created = LeagueCompetitor.objects_with_moved.get_or_create(league=self.new_league, competitor=self.competitor)
+        if not created:
+            new_lc.is_moved = False
+        rating_before = new_lc.rating()
+        rating_delta = self.new_rating - rating_before
+        LeagueCompetitor.objects_with_moved.filter(id=old_lc.id).update(is_moved=True)
+
+        if rating_delta != 0:
+            Rating.objects.create(league=new_lc.league, type='league_change', datetime=self.created, player=new_lc.competitor,
+                       delta=rating_delta, rating_before=rating_before)
+
+    def __unicode__(self):
+        return u"%s (%s -> %s)" % (self.competitor, self.old_league.id, self.new_league.id)

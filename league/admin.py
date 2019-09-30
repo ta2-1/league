@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta, time
 
+from django import forms
 from django.contrib import admin
 from django.contrib.flatpages.models import FlatPage
 from django.contrib.flatpages.admin import FlatpageForm
@@ -18,7 +19,7 @@ from rating.models import Competitor
 from .forms import GameAdminForm
 from .models import (
     League, LeagueSettings, LeagueTournament, LeagueTournamentWithSets,
-    LeagueCompetitor, Game, Rating, LeagueTournamentSet, LeagueGroup)
+    LeagueCompetitor, Game, Rating, LeagueTournamentSet, LeagueGroup, LeagueCompetitorLeagueChange)
 from .utils import clear_cache_on_game_save
 
 
@@ -228,6 +229,22 @@ class RatingAdmin(RatingCacheClearAdmin):
     list_display = ('__unicode__', 'game',)
     list_filter = ('league', 'game__location', 'datetime')
     search_fields = ('player__lastName',)
+
+
+class LeagueCompetirorLeagueChangeForm(forms.ModelForm):
+    competitor = forms.ModelChoiceField(queryset=Competitor.objects.order_by('lastName'))
+
+    class Meta:
+        model = LeagueCompetitorLeagueChange
+        fields = '__all__'
+
+
+class LeagueCompetirorLeagueChangeAdmin(admin.ModelAdmin):
+    list_display = ('__unicode__', 'new_rating',)
+    list_filter = ('old_league', 'new_league')
+    search_fields = ('competitor__lastName',)
+
+    form = LeagueCompetirorLeagueChangeForm
 
 
 class LeagueGroupAdmin(admin.ModelAdmin):
