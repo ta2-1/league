@@ -297,6 +297,7 @@ admin.site.register(LeagueTournament, LeagueTournamentAdmin)
 admin.site.register(LeagueTournamentWithSets, LeagueTournamentWithSetsAdmin)
 admin.site.register(Game, GameAdmin)
 admin.site.register(Rating, RatingAdmin)
+admin.site.register(LeagueCompetitorLeagueChange, LeagueCompetirorLeagueChangeAdmin)
 
 
 class FlatPageAdmin(TranslationAdmin):
