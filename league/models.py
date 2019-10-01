@@ -719,18 +719,23 @@ class LeagueCompetitorLeagueChange(models.Model):
     old_league = models.ForeignKey(League, verbose_name=u"Лига (старая)", related_name='old_league_changes')
     new_league = models.ForeignKey(League, verbose_name=u"Лига (новая)", related_name='new_league_changes')
     competitor = models.ForeignKey(Competitor, verbose_name=u"Участник")
-    new_rating = models.FloatField(verbose_name=u"Рейтинг в новой лиге")
+    new_rating = models.FloatField(verbose_name=u"Рейтинг в новой лиге", blank=True)
     created = models.DateTimeField(verbose_name=u"Дата создания", auto_now_add=True)
 
     def save(self, *args, **kwargs):
         #with transaction.atomic():
-        super(LeagueCompetitorLeagueChange, self).save(*args, **kwargs)
         old_lc = LeagueCompetitor.objects.get(league=self.old_league, competitor=self.competitor)
         new_lc, created = LeagueCompetitor.objects_with_moved.get_or_create(league=self.new_league, competitor=self.competitor)
         if not created:
             new_lc.is_moved = False
         rating_before = new_lc.rating()
-        rating_delta = self.new_rating - rating_before
+        if self.new_rating != None:
+            rating_delta = self.new_rating - rating_before
+        else:
+            self.new_rating = old_lc.rating()
+            rating_delta = self.new_rating - rating_before
+
+        super(LeagueCompetitorLeagueChange, self).save(*args, **kwargs)
         LeagueCompetitor.objects_with_moved.filter(id=old_lc.id).update(is_moved=True)
 
         if rating_delta != 0:
