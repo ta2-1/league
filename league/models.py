@@ -236,7 +236,7 @@ class League(models.Model):
 
     @property
     def current_rating_datetime(self):
-        dt = timezone.now() - timedelta(days=1)
+        dt = timezone.now()
 
         return dt.replace(hour=0, minute=0, second=0, microsecond=0)
 
