@@ -716,7 +716,7 @@ class LeagueCompetitorLeagueChange(models.Model):
         verbose_name = u'Перемещение между дивизионами'
         verbose_name_plural = u'Перемещения между дивизионами'
 
-    old_league = models.ForeignKey(League, verbose_name=u"Лига (старая)", related_name='old_league_changes')
+    old_league = models.ForeignKey(League, verbose_name=u"Лига (старая)", related_name='old_league_changes', blank=True, null=True)
     new_league = models.ForeignKey(League, verbose_name=u"Лига (новая)", related_name='new_league_changes')
     competitor = models.ForeignKey(Competitor, verbose_name=u"Участник")
     new_rating = models.FloatField(verbose_name=u"Рейтинг в новой лиге", blank=True)
@@ -724,7 +724,9 @@ class LeagueCompetitorLeagueChange(models.Model):
 
     def save(self, *args, **kwargs):
         #with transaction.atomic():
-        old_lc = LeagueCompetitor.objects.get(league=self.old_league, competitor=self.competitor)
+        old_lc = None
+        if self.old_league is not None:
+            old_lc = LeagueCompetitor.objects.get(league=self.old_league, competitor=self.competitor)
         new_lc, created = LeagueCompetitor.objects_with_moved.get_or_create(league=self.new_league, competitor=self.competitor)
         if not created:
             new_lc.is_moved = False
@@ -732,15 +734,17 @@ class LeagueCompetitorLeagueChange(models.Model):
         if self.new_rating != None:
             rating_delta = self.new_rating - rating_before
         else:
-            self.new_rating = old_lc.rating()
+            self.new_rating = old_lc.rating() if old_lc is not None else rating_before
             rating_delta = self.new_rating - rating_before
 
         super(LeagueCompetitorLeagueChange, self).save(*args, **kwargs)
-        LeagueCompetitor.objects_with_moved.filter(id=old_lc.id).update(is_moved=True)
+        if old_lc is not None:
+            LeagueCompetitor.objects_with_moved.filter(id=old_lc.id).update(is_moved=True)
 
         if rating_delta != 0:
             Rating.objects.create(league=new_lc.league, type='league_change', datetime=self.created, player=new_lc.competitor,
                        delta=rating_delta, rating_before=rating_before)
 
     def __unicode__(self):
-        return u"%s (%s -> %s)" % (self.competitor, self.old_league.id, self.new_league.id)
+        old_league = self.old_league.id if self.old_league is not None else "[]"
+        return u"%s (%s -> %s)" % (self.competitor, old_league, self.new_league.id)
