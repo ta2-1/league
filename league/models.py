@@ -382,13 +382,15 @@ class LeagueCompetitor(models.Model):
 
         return len(rivals.keys())
 
-    def game_count_with(self, rival, date_time=None):
+    def game_count_with_in_month(self, rival, date_time=None):
         dt = timezone.now() if date_time is None else date_time
+        start_dt, end_dt = get_month_interval(dt)
 
         gg = Game.objects.filter(
             Q(
                 league=self.league,
-                end_datetime__lte=dt,
+                end_datetime__gte=start_dt,
+                end_datetime__lte=end_dt,
                 no_record=False,
                 rating__isnull=False
             ) & (
@@ -593,7 +595,7 @@ def update_rating_job(game):
 
         min_rival_count = min(lc1.rival_count_in_month(game.start_datetime),
                               lc2.rival_count_in_month(game.start_datetime))
-        between_count = lc1.game_count_with(lc2.competitor, game.start_datetime)
+        between_count = lc1.game_count_with_in_month(lc2.competitor, game.start_datetime)
         n = league_get_N(game.league.settings, game.result1, game.result2)
         is_max_of_3 = max([game.result1, game.result2]) == 2
         delta = league_get_DELTA(game.league.settings, r1, r2, n, min_rival_count, between_count, is_max_of_3)
