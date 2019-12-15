@@ -18,8 +18,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from rating.models import Competitor, Location
 from rating.utils import get_place
-from league.utils import (league_get_N, league_get_DELTA,
-                          update_rating_after, get_place_interval)
+from league.utils import (league_get_N, league_get_DELTA, get_place_interval)
 from league.utils import (empty2dash, get_league_rating_datetime, statslog,
                           leaguecompetitor_getfromcache,
                           clear_cache_on_game_save, get_rating_competitor_list,
@@ -574,45 +573,39 @@ class Game(models.Model):
         return Rating.objects.get(player=self.player1, game=self).delta
 
     def update_rating(self):
-        #update_rating_job.delay(self)
-        update_rating_job(self)
+        lc1 = LeagueCompetitor.objects.get(league=self.league, competitor=self.player1)
+        lc2 = LeagueCompetitor.objects.get(league=self.league, competitor=self.player2)
+        (r1, r2) = map(lambda x: x.rating(self.end_datetime), (lc1, lc2))
+        date = self.end_datetime.strftime("%Y-%m-%d")
+        if self.no_record:
+            delta = 0
+        else:
+            cache = caches['league']
+            cache.delete('%s:%s:%s' % (lc1.id, 'rival_count', date))
+            cache.delete('%s:%s:%s' % (lc2.id, 'rival_count', date))
+            cache.delete('%s:%s:%s' % (lc1.id, 'game_count', date))
+            cache.delete('%s:%s:%s' % (lc2.id, 'game_count', date))
 
+            min_rival_count = min(lc1.rival_count_in_month(self.start_datetime),
+                                  lc2.rival_count_in_month(self.start_datetime))
+            between_count = lc1.game_count_with_in_month(lc2.competitor, self.start_datetime)
+            n = league_get_N(self.league.settings, self.result1, self.result2)
+            is_max_of_3 = max([self.result1, self.result2]) == 2
+            delta = league_get_DELTA(self.league.settings, r1, r2, n, min_rival_count, between_count, is_max_of_3)
 
-#@job
-def update_rating_job(game):
-    lc1 = LeagueCompetitor.objects.get(league=game.league, competitor=game.player1)
-    lc2 = LeagueCompetitor.objects.get(league=game.league, competitor=game.player2)
-    (r1, r2) = map(lambda x: x.rating(game.end_datetime), (lc1, lc2))
-    date = game.end_datetime.strftime("%Y-%m-%d")
-    if game.no_record:
-        delta = 0
-    else:
-        cache = caches['league']
-        cache.delete('%s:%s:%s' % (lc1.id, 'rival_count', date))
-        cache.delete('%s:%s:%s' % (lc2.id, 'rival_count', date))
-        cache.delete('%s:%s:%s' % (lc1.id, 'game_count', date))
-        cache.delete('%s:%s:%s' % (lc2.id, 'game_count', date))
+        if Rating.objects.filter(league=self.league, game=self).count() == 0:
+            rating1 = Rating(league=self.league, type='game', game=self, datetime=self.end_datetime, player=self.player1,
+                             delta=delta, rating_before=r1)
+            rating2 = Rating(league=self.league, type='game', game=self, datetime=self.end_datetime, player=self.player2,
+                             delta=0 - delta, rating_before=r2)
+        else:
+            rating1 = Rating.objects.get(league=self.league, game=self, player=self.player1)
+            rating2 = Rating.objects.get(league=self.league, game=self, player=self.player2)
+            rating1.delta = delta
+            rating2.delta = 0 - delta
 
-        min_rival_count = min(lc1.rival_count_in_month(game.start_datetime),
-                              lc2.rival_count_in_month(game.start_datetime))
-        between_count = lc1.game_count_with_in_month(lc2.competitor, game.start_datetime)
-        n = league_get_N(game.league.settings, game.result1, game.result2)
-        is_max_of_3 = max([game.result1, game.result2]) == 2
-        delta = league_get_DELTA(game.league.settings, r1, r2, n, min_rival_count, between_count, is_max_of_3)
-
-    if Rating.objects.filter(league=game.league, game=game).count() == 0:
-        rating1 = Rating(league=game.league, type='game', game=game, datetime=game.end_datetime, player=game.player1,
-                         delta=delta, rating_before=r1)
-        rating2 = Rating(league=game.league, type='game', game=game, datetime=game.end_datetime, player=game.player2,
-                         delta=0 - delta, rating_before=r2)
-    else:
-        rating1 = Rating.objects.get(league=game.league, game=game, player=game.player1)
-        rating2 = Rating.objects.get(league=game.league, game=game, player=game.player2)
-        rating1.delta = delta
-        rating2.delta = 0 - delta
-
-    rating1.save()
-    rating2.save()
+        rating1.save()
+        rating2.save()
 
 
 class Rating(models.Model):
@@ -633,9 +626,13 @@ class Rating(models.Model):
     rating_after = models.FloatField(u'Рейтинг "После"')
     
     def save(self, *args, **kwargs):
+        rating_after = Rating.objects.filter(league=self.league, player=self.player, datetime__gt=self.datetime).order_by(
+            'datetime')[:1]
+        if rating_after:
+            raise ValidationError(u"There exists after-rating where id=`%s` and datetime=`%s`." % (rating_after.id, rating_after.datetime.strftime("%Y-%m-%d")))
+
         self.rating_after = self.rating_before + self.delta
         super(Rating, self).save(*args, **kwargs)
-        update_rating_after(self)
         cache = caches['league']
         dt_str = self.datetime.strftime("%Y-%m-%d")
         cache_key= u'rating_competitor_list_for_%d_league_%s' % (self.id, dt_str)
@@ -725,7 +722,6 @@ class LeagueCompetitorLeagueChange(models.Model):
     created = models.DateTimeField(verbose_name=u"Дата создания", auto_now_add=True)
 
     def save(self, *args, **kwargs):
-        #with transaction.atomic():
         old_lc = None
         if self.old_league is not None:
             old_lc = LeagueCompetitor.objects.get(league=self.old_league, competitor=self.competitor)
