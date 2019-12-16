@@ -330,6 +330,13 @@ LOGGING = {
             'maxBytes': 1024 * 1024 * 5,
             'formatter': 'league',
         },
+        'rating': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(PROJECT_PATH, "log/rating.log"),
+            'backupCount': 5,
+            'maxBytes': 1024 * 1024 * 5,
+            'formatter': 'league',
+        },
         'update_rating': {
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': os.path.join(PROJECT_PATH, "log/update_rating.log"),
@@ -343,6 +350,10 @@ LOGGING = {
         }
     },
     'loggers': {
+        'rating': {
+            'handlers': ['rating'],
+            'level': 'INFO',
+        },
         'league': {
             'handlers': ['league'],
             'level': 'INFO',

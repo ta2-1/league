@@ -20,7 +20,7 @@ class Command(BaseCommand):
 
     def handle(self, **options):
         league_group_id = options.get('league_group_id', None)
-        logger = logging.getLogger('all')
+        logger = logging.getLogger('rating')
 
         for game in Game.objects.filter(
                 league__group_id=league_group_id,
