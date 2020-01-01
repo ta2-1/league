@@ -728,6 +728,8 @@ class LeagueCompetitorLeagueChange(models.Model):
         new_lc, created = LeagueCompetitor.objects_with_moved.get_or_create(league=self.new_league, competitor=self.competitor)
         if not created:
             new_lc.is_moved = False
+            new_lc.save()
+
         rating_before = new_lc.rating()
         if self.new_rating != None:
             rating_delta = self.new_rating - rating_before
