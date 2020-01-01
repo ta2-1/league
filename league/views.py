@@ -17,7 +17,8 @@ from rating.genericviews import (
     DetailedWithExtraContext as DetailView,
     ListViewWithExtraContext as ListView)
 
-from league.models import get_current_leagues, Game, League, LeagueCompetitor, Rating
+from league.models import (
+    get_current_leagues, Game, League, LeagueCompetitor, Rating, LeagueGroup, LeagueCompetitorLeagueChange)
 from league.utils import (
     league_get_N, league_get_DELTA, get_league_rating_datetime)
 
@@ -97,6 +98,26 @@ class LeagueRulesView(LeagueDetailView):
     def get_context_data(self, **kwargs):
         f = get_object_or_404(FlatPage, id=self.object.rules_id)
         return {'flatpage': f, 'league': self.object}
+
+
+class LeagueGroupDetailView(DetailView):
+    model = LeagueGroup
+    pk_url_kwarg = 'leaguegroup_id'
+
+
+class LeagueChangesView(LeagueGroupDetailView):
+    template_name = 'league/leaguechanges.html'
+
+    def get_context_data(self, **kwargs):
+
+        league_group = self.get_object()
+        objects = LeagueCompetitorLeagueChange.objects.filter(
+            old_league__group=league_group
+        ).order_by('-created', 'new_league__division')
+
+        return {
+            'object_list': objects
+        }
 
 
 class LeagueRatingView(LeagueDetailView):

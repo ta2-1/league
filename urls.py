@@ -59,6 +59,8 @@ urlpatterns = [
     url(r'^leagues/(?P<league_id>\d+)/statement/$', league_views.LeagueStatementView.as_view(), {}, name='league_statement'),
     url(r'^leagues/(?P<league_id>\d+)/rules/$', league_views.LeagueRulesView.as_view(), {}, name='league_rules'),
 
+    url(r'^leaguechanges/(?P<leaguegroup_id>\d+)/$', league_views.LeagueChangesView.as_view(), {}, name='league_changes'),
+
     url(r'^i18n/setlang/', lang_view.set_language),
 
     url(r'^contacts/$', flatpage, {'url': '/contacts/'}, name='contacts'),

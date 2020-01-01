@@ -1,0 +1,34 @@
+{% extends "league/leagues.html" %}
+
+{% load i18n rating_tags %}
+
+{% block title %}
+{% trans "Перемещения между дивизионами" %} — {{site.name}}
+{% endblock %}
+
+{% block blockbots %}
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
+
+{% block content %}
+<h1>{% trans "Перемещения между дивизионами" %}</h1>
+
+<table>
+	<tr>
+	<th>{% trans "Дата" %}</th>
+	<th>{% trans "Игрок" %}</th>
+	<th>{% trans "Новый дивизион" %}</th>
+	<th>{% trans "Рейтинг в новом дивизионе" %}</th>
+	</tr>
+	<tbody>
+		{% for obj in object_list %} <!--|dictsort:"datetime, player.lastName" }-->
+		<tr>
+			<td>{{obj.created.date}}</td>
+			<td class="td_name"><a href="{% url "competitor_league" obj.competitor.id obj.new_league.id %}">{{obj.competitor.lastName}} {{obj.competitor.firstName}}</a></td>
+			<td>{{obj.new_league.division}}</td>
+			<td>{{obj.new_rating|floatformat:2}}</td>
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+{% endblock %}
